@@ -123,7 +123,7 @@ enum Palette {
             case .video: return .video
             case .audio: return .audio
             case .data, .binary, .archive: return .data
-            case .directory, .other: return .other
+            case .directory, .other, .volume, .free: return .other
             }
         }
     }

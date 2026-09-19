@@ -123,6 +123,26 @@ enum Reclaim {
              match: .named(".gradle"),
              siblings: ["build.gradle", "build.gradle.kts", "settings.gradle", "settings.gradle.kts"],
              recovery: "gradle build"),
+        Rule(id: "venv", label: tr(en: "Python virtual environment", fr: "environnement virtuel Python"), confidence: .regenerable,
+             match: .named(".venv"),
+             siblings: ["pyproject.toml", "requirements.txt", "setup.py", "Pipfile", "uv.lock", "poetry.lock"],
+             recovery: "python -m venv / uv sync / poetry install"),
+        Rule(id: "venv-plain", label: tr(en: "Python virtual environment", fr: "environnement virtuel Python"), confidence: .regenerable,
+             match: .named("venv"),
+             siblings: ["pyproject.toml", "requirements.txt", "setup.py", "Pipfile"],
+             contents: ["pyvenv.cfg"],
+             recovery: "python -m venv + pip install"),
+        Rule(id: "carthage", label: tr(en: "Carthage build", fr: "compilation Carthage"), confidence: .regenerable,
+             match: .named("Carthage"), siblings: ["Cartfile"], recovery: "carthage bootstrap"),
+        Rule(id: "dart-tool", label: tr(en: "Dart/Flutter tool cache", fr: "cache d'outils Dart/Flutter"), confidence: .regenerable,
+             match: .named(".dart_tool"), siblings: ["pubspec.yaml"], recovery: "flutter pub get"),
+        Rule(id: "vendor", label: tr(en: "vendored dependencies", fr: "dépendances vendorisées"), confidence: .regenerable,
+             match: .named("vendor"), siblings: ["composer.json", "go.mod"],
+             recovery: "composer install / go mod vendor"),
+        Rule(id: "elixir-build", label: tr(en: "Elixir build output", fr: "cible de compilation Elixir"), confidence: .regenerable,
+             match: .named("_build"), siblings: ["mix.exs"], recovery: "mix compile"),
+        Rule(id: "zig-cache", label: tr(en: "Zig cache", fr: "cache Zig"), confidence: .regenerable,
+             match: .named(".zig-cache"), siblings: ["build.zig"], recovery: "zig build"),
 
         // --- Tool droppings that regenerate without being asked ---
         Rule(id: "pycache", label: tr(en: "Python bytecode", fr: "bytecode Python"), confidence: .regenerable,
@@ -156,6 +176,16 @@ enum Reclaim {
              recovery: tr(en: "recreated by Xcode", fr: "recréé par Xcode")),
         Rule(id: "logs", label: tr(en: "application logs", fr: "journaux applicatifs"), confidence: .cache,
              match: .childrenOf(expand("~/Library/Logs")), recovery: tr(en: "not applicable", fr: "sans objet")),
+        Rule(id: "pnpm-store", label: tr(en: "pnpm store", fr: "magasin pnpm"), confidence: .cache,
+             match: .exact(expand("~/Library/pnpm/store")), recovery: tr(en: "downloaded again when needed", fr: "retéléchargé au besoin")),
+        Rule(id: "go-mod-cache", label: tr(en: "Go module cache", fr: "cache des modules Go"), confidence: .cache,
+             match: .exact(expand("~/go/pkg/mod/cache")), recovery: tr(en: "downloaded again when needed", fr: "retéléchargé au besoin")),
+        Rule(id: "maven", label: tr(en: "Maven repository", fr: "dépôt Maven local"), confidence: .cache,
+             match: .exact(expand("~/.m2/repository")), recovery: tr(en: "downloaded again when needed", fr: "retéléchargé au besoin")),
+        Rule(id: "cargo-src", label: tr(en: "Cargo extracted sources", fr: "sources extraites par Cargo"), confidence: .cache,
+             match: .exact(expand("~/.cargo/registry/src")), recovery: tr(en: "re-extracted from the cache", fr: "réextraites du cache")),
+        Rule(id: "xcode-previews", label: tr(en: "Xcode previews", fr: "aperçus Xcode"), confidence: .cache,
+             match: .exact(expand("~/Library/Developer/Xcode/UserData/Previews")), recovery: tr(en: "recreated by Xcode", fr: "recréé par Xcode")),
 
         // --- Reported, never touched ---
         Rule(id: "ios-backups", label: tr(en: "iOS backups", fr: "sauvegardes iOS"), confidence: .review,
@@ -173,6 +203,17 @@ enum Reclaim {
         Rule(id: "trash", label: tr(en: "Trash", fr: "corbeille"), confidence: .review,
              match: .exact(expand("~/.Trash")),
              recovery: tr(en: "NONE — empty it from the Finder if that is what you want", fr: "AUCUNE — vider depuis le Finder si c'est voulu")),
+        // Docker's disk image is one sparse file that only ever grows: the
+        // right move is `docker system prune` from inside, not deleting the
+        // image and every container with it.
+        Rule(id: "docker-raw", label: tr(en: "Docker disk image", fr: "image disque Docker"), confidence: .review,
+             match: .exact(expand("~/Library/Containers/com.docker.docker/Data/vms/0/data")),
+             contents: ["Docker.raw"],
+             recovery: tr(en: "docker system prune — reclaims from inside; deleting loses every container and image",
+                          fr: "docker system prune — récupère de l'intérieur ; supprimer perd conteneurs et images")),
+        Rule(id: "android-avd", label: tr(en: "Android virtual devices", fr: "appareils virtuels Android"), confidence: .review,
+             match: .childrenOf(expand("~/.android/avd")),
+             recovery: tr(en: "recreated from Android Studio — their state is lost", fr: "recréés depuis Android Studio — leur état est perdu")),
     ]
 
     // MARK: - Guards
@@ -185,7 +226,18 @@ enum Reclaim {
         "/private/var/db", "/private/var/folders", "/Volumes/Recovery",
     ]
 
-    static func isProtected(_ path: String) -> Bool {
+    static let dataVolume = "/System/Volumes/Data"
+
+    /// `/System/Volumes/Data/Users/x` and `/Users/x` are the same directory
+    /// seen through a firmlink; rules and guards reason on the short form.
+    static func canonical(_ path: String) -> String {
+        if path == dataVolume { return "/" }
+        if path.hasPrefix(dataVolume + "/") { return String(path.dropFirst(dataVolume.count)) }
+        return path
+    }
+
+    static func isProtected(_ rawPath: String) -> Bool {
+        let path = canonical(rawPath)
         // /usr/local and /opt are user territory; the rest of /usr is not.
         // Checked first: `/usr` is in the forbidden list, and the prefix test
         // would otherwise claim Homebrew's whole tree for the system.
@@ -337,8 +389,13 @@ enum Reclaim {
 
 extension Tree {
     /// Locate a node by absolute path, descending from the scan root.
-    func node(at absolutePath: String) -> Int32? {
+    func node(at requested: String) -> Int32? {
         guard let rootPath = name.first else { return nil }
+        // A scan rooted on the Data volume holds `~` under its long name.
+        var absolutePath = requested
+        if rootPath.hasPrefix(Reclaim.dataVolume), !requested.hasPrefix(Reclaim.dataVolume) {
+            absolutePath = Reclaim.dataVolume + requested
+        }
         let root = rootPath == "/" ? "" : rootPath
         guard absolutePath == rootPath || absolutePath.hasPrefix(root + "/") else { return nil }
         let tail = String(absolutePath.dropFirst(root.count))

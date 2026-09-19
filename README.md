@@ -23,14 +23,18 @@ the Dock icon is measured too.
 | | |
 |---|---|
 | `⌘O` | choose a folder · the File menu keeps the last eight |
+| `⌘⇧O` | measure this Mac: the Data volume, framed by the container's other volumes |
 | `⌘⇧R` | measure the same folder again |
+| `⌘⇧L` | follow changes: every write under the folder triggers a background measure |
 | `⌘S` | drop a marker, to compare later |
 | `⌘R` | the "reclaim space" panel |
+| `⌘D` | the "what changed" panel, when a marker is loaded |
 | `⌘E` | export the map as PNG |
 | `⌘F` | search for a name: anything that doesn't match fades out |
 | `⌘1`…`⌘5` | the metric · `⌥⌘1`…`⌥⌘5` the colour |
 | double-click · `↩` | go down into a folder · `⌫` or `⌘↑` to go back up, `⌘⇧↑` to the root |
 | `←` `→` `↑` `↓` | move from one rectangle to its neighbour · `⇥` to enter the selection |
+| `space` | Quick Look the selection; the arrows keep working underneath |
 | right-click | open, reveal in Finder, copy path, move to Trash |
 | `⌥⌘I` | hide the inspector |
 | `⌘.` | stop a scan in progress — the map is shown as is, marked partial |
@@ -50,6 +54,7 @@ The bundle's binary is the same one as the terminal —
 swift build -c release
 
 cadastre ~/Library --depth 2        # measure (Ctrl-C interrupts and shows the measured floor)
+cadastre --disk                     # the whole Data volume, where everything deletable lives
 cadastre --volumes                  # volume status only, no scan
 cadastre ~ --lang en                # the language of messages; otherwise the system's, or CADASTRE_LANG
 
@@ -63,7 +68,9 @@ cadastre ~ --trash                  # ... to the Trash, after confirmation
 cadastre ~ --ui                     # the map
 cadastre ~ --ui --since last        # ... coloured by what changed
 cadastre ~ --ui --find node_modules # ... with a search already typed in
-cadastre ~ --ui --clean             # ... opened on the "reclaim" panel
+cadastre ~ --ui --open reclaim      # ... opened on the "reclaim" panel
+cadastre ~ --ui --since last --open changes   # ... or on "what changed"
+cadastre --ui --disk                # this Mac: the map of the whole disk
 cadastre ~ --snapshot carte.png     # PNG export, without opening a window
 ```
 
@@ -232,6 +239,30 @@ shifted. Without that, the report is accurate and misleading. The map in
 **By what changed** mode colours the bytes written, not the displayed
 metric, for the same reason.
 
+### In the window
+
+`⌘D` opens the same change as a table: before, after, delta, then "where it
+moved" — the folders that themselves wrote or lost bytes — and the files that
+appeared, grew, shrank, vanished. Double-click a row and the map zooms to its
+parent folder and selects the entry. With the colour set to "by what
+changed", the current level's list in the inspector shows bytes written
+rather than size, sorted by change: the "what ate forty gigabytes" reading
+without leaving the window.
+
+### Following changes
+
+`⌘⇧L` puts an FSEvents watcher on the folder. Every write triggers a
+background measure — no overlay, just a "measuring again…" in the footer —
+and the previous measure becomes the marker: the map colours exactly what
+just moved. Start a build, watch `DerivedData` turn red.
+
+The trigger is incremental; the measure is not. Clone families and
+reclaimable bytes are settled over the whole scan, and a tree patched one
+folder at a time would slowly drift from the disk. A two-second measure is
+cheaper than that drift. Events are coalesced: a build writes thousands of
+files over a few seconds, and one measure at the end is worth more than ten
+in the middle; a slow folder is re-measured only after a few scan durations.
+
 ### Markers
 
 `⌘S` in the app, `--save auto` on the command line: the folder's state is
@@ -255,6 +286,27 @@ stored; subtree totals are recomputed on load, which keeps them from
 drifting.
 
 220,000 files and 42,000 folders fit in 22 MB, read back in 68 ms.
+
+## The whole disk
+
+`⌘⇧O` in the app, `--disk` on the command line. This is not a scan of `/`:
+since Catalina, `/` is the sealed system volume, and `/Users`, `/Applications`
+or `/Library` are firmlinks into the Data volume. Cadastre measures the Data
+volume at its real mount point, `/System/Volumes/Data`, where everything a
+person can delete lives, and adds the container's other volumes — the sealed
+system, Preboot, Recovery, VM — as grey tiles, with their usage read from
+`diskutil`. The map then adds up to the disk's used space, not a folder's.
+
+Free space is a setting (View › Show Free Space on the Map), off by default:
+on a half-empty disk it is three quarters of the map and crushes everything
+else. The figure stays in the root's inspector, with the purgeable share.
+
+The catalogue and the guards see through the prefix:
+`/System/Volumes/Data/Users/x/Library/Caches` is recognised as
+`~/Library/Caches`, and is not taken for part of `/System`. Without Full Disk
+Access the app says so before measuring, with the button that opens the right
+setting — 207 refused folders on an ordinary Mac, and a total announced as a
+floor.
 
 ## Safe to delete
 
@@ -401,14 +453,22 @@ Sources/cadastre/UI/
   LabelPass.swift        labels, ink chosen by measured contrast
   Legend.swift           permanent, labelled legend
   Window.swift           window, toolbar, menus, breadcrumb, inspector, empty state
-  Session.swift          analysed folder, markers, background scan, recent folders
+  Session.swift          analysed folder, markers, background scan, whole disk, recents
+  FileWatcher.swift      FSEvents: the trigger behind "follow changes"
+  DiffSheet.swift        "what changed" as a table, leading back to the map
   ReclaimSheet.swift     checkable catalogue, combined gain, re-verification
   Snapshot.swift         off-screen PNG export
   Icon.swift             icon, tiled by the same algorithm as the map
+Tests/cadastreTests/
+  AccountingTests.swift  families, layout, units, guards, diff — on synthetic trees
 Scripts/
   verify.sh              ground truth: every case has an answer known by construction
   bundle.sh              builds Cadastre.app (ad hoc signature)
 ```
+
+`swift test` covers the corners a real disk does not produce on demand: a
+family straddling two folders, a hard link whose two names must go together,
+a root frame with no title band, units in both languages.
 
 `Scripts/verify.sh` builds real files on a real APFS volume — these numbers
 come from the filesystem, they can't be tested dry — and checks, among other
@@ -417,9 +477,12 @@ geometry is accurate to within 1%, and that the bundle builds.
 
 ## Left to do
 
-- `--watch`: incremental refresh via FSEvents instead of a rescan
-- Widen the catalogue (Docker.raw, which calls for a `docker system prune`
-  recommendation rather than deletion; Mail Downloads; Homebrew caches)
+- A truly incremental measure behind FSEvents: re-read only the folders
+  that changed, and settle again only the families they hold
+- The size of local snapshots, which `tmutil` does not give; they stay a
+  warning line rather than a tile
+- The map for VoiceOver: the level table is the intended alternative, but
+  the rectangles themselves expose nothing
 - Switch language without relaunching: every control was built with the
   previous language, and rebuilding all of them live hasn't yet been judged
   worth the code it costs

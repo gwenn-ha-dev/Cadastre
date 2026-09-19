@@ -1,5 +1,6 @@
 import AppKit
 import Metal
+import Quartz
 import QuartzCore
 import simd
 
@@ -68,6 +69,8 @@ final class TreemapView: NSView {
     var onContextMenu: ((Int32) -> NSMenu?)?
     var onActivate: ((Int32) -> Void)?
     var onSearch: ((SearchSummary?) -> Void)?
+    /// Quick Look asks for the selection's URL through this.
+    var previewURL: ((Int32) -> URL?)?
 
     private(set) var rootNode: Int32 = 0
     private(set) var selectedNode: Int32? = nil
@@ -92,6 +95,11 @@ final class TreemapView: NSView {
     private var selectedIndex = -1
     private var matchMask: [Bool]? = nil
     private var tracking: NSTrackingArea?
+    /// The size the current rectangles were laid out for. During a live
+    /// resize they are stretched to the new size rather than recomputed:
+    /// forty thousand rectangles per frame is the difference between a
+    /// window that follows the pointer and one that stutters behind it.
+    private var layoutSize = CGSize.zero
 
     // Zoom is a transform on the current layout, swapped for a fresh layout
     // once the animation lands. Re-laying out every frame would be both slower
@@ -133,7 +141,14 @@ final class TreemapView: NSView {
         let scale = window?.backingScaleFactor ?? 2
         host.metalLayer.contentsScale = scale
         host.metalLayer.drawableSize = CGSize(width: bounds.width * scale, height: bounds.height * scale)
-        rebuildLayout()
+        if inLiveResize, !rects.isEmpty, layoutSize.width > 0, animation == nil {
+            zoomScale = SIMD2(Float(bounds.width / layoutSize.width), Float(bounds.height / layoutSize.height))
+            zoomTranslate = SIMD2(0, 0)
+            labels.isHidden = true
+            render()
+        } else {
+            rebuildLayout()
+        }
 
         if let tracking { removeTrackingArea(tracking) }
         let area = NSTrackingArea(rect: bounds,
@@ -148,8 +163,17 @@ final class TreemapView: NSView {
         refreshColors()
     }
 
+    override func viewDidEndLiveResize() {
+        super.viewDidEndLiveResize()
+        zoomScale = SIMD2(1, 1)
+        zoomTranslate = SIMD2(0, 0)
+        labels.isHidden = false
+        rebuildLayout()
+    }
+
     private func rebuildLayout() {
         guard let model, bounds.width > 2, bounds.height > 2 else { return }
+        layoutSize = bounds.size
         rects = TreemapLayout.compute(model, root: rootNode,
                                       in: Rect(x: 0, y: 0,
                                                width: Float(bounds.width),
@@ -300,8 +324,29 @@ final class TreemapView: NSView {
             }
         case 48:                                     // tab: step into the selection
             stepInto()
+        case 49:                                     // space: Quick Look
+            toggleQuickLook()
         default: super.keyDown(with: event)
         }
+    }
+
+    // MARK: - Quick Look
+
+    private func toggleQuickLook() {
+        guard let panel = QLPreviewPanel.shared() else { return }
+        if panel.isVisible { panel.orderOut(nil) } else { panel.makeKeyAndOrderFront(nil) }
+    }
+
+    override func acceptsPreviewPanelControl(_ panel: QLPreviewPanel!) -> Bool { true }
+
+    override func beginPreviewPanelControl(_ panel: QLPreviewPanel!) {
+        panel.dataSource = self
+        panel.delegate = self
+    }
+
+    override func endPreviewPanelControl(_ panel: QLPreviewPanel!) {
+        panel.dataSource = nil
+        panel.delegate = nil
     }
 
     private func select(index: Int) {
@@ -427,6 +472,37 @@ final class TreemapView: NSView {
             selectedIndex = selectedNode.flatMap { node in rects.firstIndex { $0.node == node } } ?? -1
             render()
         }
+    }
+}
+
+extension TreemapView: QLPreviewPanelDataSource, QLPreviewPanelDelegate {
+    func numberOfPreviewItems(in panel: QLPreviewPanel!) -> Int {
+        selectedNode.flatMap { previewURL?($0) } == nil ? 0 : 1
+    }
+
+    func previewPanel(_ panel: QLPreviewPanel!, previewItemAt index: Int) -> QLPreviewItem! {
+        selectedNode.flatMap { previewURL?($0) } as NSURL?
+    }
+
+    /// Arrow keys keep working while the panel is up: they move the selection
+    /// underneath and the preview follows.
+    func previewPanel(_ panel: QLPreviewPanel!, handle event: NSEvent!) -> Bool {
+        guard event.type == .keyDown else { return false }
+        switch event.keyCode {
+        case 123, 124, 125, 126:
+            keyDown(with: event)
+            panel.reloadData()
+            return true
+        default:
+            return false
+        }
+    }
+
+    func previewPanel(_ panel: QLPreviewPanel!, sourceFrameOnScreenFor item: QLPreviewItem!) -> NSRect {
+        guard selectedIndex >= 0, let window else { return .zero }
+        let rect = rects[selectedIndex].rect
+        let local = NSRect(x: CGFloat(rect.x), y: CGFloat(rect.y), width: CGFloat(rect.width), height: CGFloat(rect.height))
+        return window.convertToScreen(convert(local, to: nil))
     }
 }
 

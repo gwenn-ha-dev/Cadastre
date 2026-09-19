@@ -25,6 +25,9 @@ func usageText() -> String {
       --ui               open the treemap (combine with --since to colour the change,
                          --clean to open on the reclaim panel, --find to search)
       --find TEXT        highlight, in the window, every name containing TEXT
+      --open changes|reclaim   open the window on that panel
+      --disk             the whole disk: the Data volume, framed by the container's
+                         other volumes and the free space (in the window: the same map)
       --snapshot FILE    export the map as PNG, without opening a window
       --color-mode M     kind | depth | sharing | delta | reclaim   (default: kind)
       --dark             render the map for a dark background
@@ -70,6 +73,9 @@ func usageText() -> String {
       --ui               ouvre le treemap (combinable avec --since pour colorer l'écart,
                          --clean pour ouvrir sur le panneau « à récupérer », --find pour chercher)
       --find TEXTE       met en avant, dans la fenêtre, tout nom contenant TEXTE
+      --open changes|reclaim   ouvre la fenêtre sur ce panneau
+      --disk             le disque entier : le volume Data, encadré par les autres
+                         volumes du conteneur et l'espace libre (dans la fenêtre : la même carte)
       --snapshot FICHIER exporte la carte en PNG, sans ouvrir de fenêtre
       --color-mode M     kind | depth | sharing | delta | reclaim   (défaut: kind)
       --dark             rend la carte pour un fond sombre
@@ -119,6 +125,8 @@ var mapSize = CGSize(width: 1280, height: 800)
 var doTrash = false
 var assumeYes = false
 var findText: String? = nil
+var openPanel: String? = nil
+var wholeDisk = false
 
 func fail(_ message: String) -> Never {
     FileHandle.standardError.write("cadastre: \(message)\n".data(using: .utf8)!)
@@ -190,6 +198,11 @@ while index < arguments.count {
         exit(0)
     case "--ui": launchUI = true
     case "--find": findText = nextValue(argument)
+    case "--open":
+        let raw = nextValue(argument)
+        guard ["changes", "reclaim"].contains(raw) else { usageError("--open: changes | reclaim") }
+        openPanel = raw
+    case "--disk": wholeDisk = true; if path == nil { path = Reclaim.dataVolume }
     case "--snapshot": snapshotPath = nextValue(argument)
     case "--dark": darkMap = true
     case "--color-mode":
@@ -261,8 +274,10 @@ if launchUI {
             catch { fail("\(error)") }
         }
     }
-    runTreemapInterface(initialPath: start, metric: metric, baseline: startBaseline,
-                        colorMode: colorMode, find: findText, openReclaim: showClean)
+    runTreemapInterface(initialPath: wholeDisk ? nil : start, metric: metric, baseline: startBaseline,
+                        colorMode: colorMode, find: findText,
+                        openReclaim: showClean || openPanel == "reclaim", openChanges: openPanel == "changes",
+                        wholeDisk: wholeDisk)
 }
 
 let scanPath = (path ?? FileManager.default.currentDirectoryPath) as NSString

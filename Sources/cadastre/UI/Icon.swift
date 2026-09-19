@@ -44,6 +44,19 @@ enum AppIcon {
                 .fill()
         }
         NSGraphicsContext.restoreGraphicsState()
+
+        // A soft light from above and a hairline rim: enough relief to sit
+        // beside the system's icons, not enough to hide the tiles.
+        NSGraphicsContext.saveGraphicsState()
+        NSBezierPath(roundedRect: card, xRadius: radius, yRadius: radius).addClip()
+        NSGradient(colorsAndLocations: (NSColor(white: 1, alpha: 0.14), 0), (NSColor(white: 1, alpha: 0), 0.55),
+                   (NSColor(white: 0, alpha: 0.10), 1))?
+            .draw(in: card, angle: -90)
+        NSGraphicsContext.restoreGraphicsState()
+        let rim = NSBezierPath(roundedRect: card.insetBy(dx: 0.5, dy: 0.5), xRadius: radius, yRadius: radius)
+        rim.lineWidth = max(1, size * 0.006)
+        NSColor(white: 1, alpha: 0.12).setStroke()
+        rim.stroke()
         return image
     }
 

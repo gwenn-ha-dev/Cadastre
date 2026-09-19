@@ -23,14 +23,18 @@ Dock est mesuré aussi.
 | | |
 |---|---|
 | `⌘O` | choisir un dossier · le menu Fichier garde les huit derniers |
+| `⌘⇧O` | mesurer ce Mac : le volume Data, encadré par les autres volumes du conteneur |
 | `⌘⇧R` | mesurer à nouveau le même dossier |
+| `⌘⇧L` | suivre les changements : chaque écriture sous le dossier relance une mesure en arrière-plan |
 | `⌘S` | poser un repère, pour comparer plus tard |
 | `⌘R` | le panneau « récupérer de l'espace » |
+| `⌘D` | le panneau « ce qui a bougé », quand un repère est chargé |
 | `⌘E` | exporter la carte en PNG |
 | `⌘F` | chercher un nom : tout ce qui ne correspond pas s'efface |
 | `⌘1`…`⌘5` | la mesure · `⌥⌘1`…`⌥⌘5` la couleur |
 | double clic · `↩` | descendre dans un dossier · `⌫` ou `⌘↑` pour remonter, `⌘⇧↑` jusqu'à la racine |
 | `←` `→` `↑` `↓` | passer d'un rectangle à son voisin · `⇥` pour entrer dans la sélection |
+| `espace` | Coup d'œil sur la sélection ; les flèches continuent de fonctionner dessous |
 | clic droit | ouvrir, révéler dans le Finder, copier le chemin, mettre à la corbeille |
 | `⌥⌘I` | masquer l'inspecteur |
 | `⌘.` | arrêter un scan en cours — la carte est affichée telle quelle, marquée partielle |
@@ -51,6 +55,7 @@ Le binaire du bundle est celui du terminal —
 swift build -c release
 
 cadastre ~/Library --depth 2        # mesurer (Ctrl-C interrompt et affiche le plancher mesuré)
+cadastre --disk                     # le volume Data entier, là où vit tout ce qu'on peut supprimer
 cadastre --volumes                  # état des volumes seul, sans scan
 cadastre ~ --lang en                # la langue des messages ; sinon celle du système, ou CADASTRE_LANG
 
@@ -64,7 +69,9 @@ cadastre ~ --trash                  # ... vers la corbeille, après confirmation
 cadastre ~ --ui                     # la carte
 cadastre ~ --ui --since last        # ... colorée par ce qui a changé
 cadastre ~ --ui --find node_modules # ... avec une recherche déjà saisie
-cadastre ~ --ui --clean             # ... ouverte sur le panneau « récupérer »
+cadastre ~ --ui --open reclaim      # ... ouverte sur le panneau « récupérer »
+cadastre ~ --ui --since last --open changes   # ... ou sur « ce qui a bougé »
+cadastre --ui --disk                # ce Mac : la carte du disque entier
 cadastre ~ --snapshot carte.png     # export PNG, sans ouvrir de fenêtre
 ```
 
@@ -236,6 +243,31 @@ comptabilité s'est déplacée. Sans ça le rapport est exact et trompeur. La ca
 en mode **Par ce qui a changé** colore d'ailleurs les octets écrits, pas la
 mesure affichée, pour la même raison.
 
+### Dans la fenêtre
+
+`⌘D` ouvre le même écart en table : avant, après, écart, puis « où ça a bougé »
+— les dossiers qui ont eux-mêmes écrit ou perdu des octets — et les fichiers
+apparus, grossis, rétrécis, disparus. Double-clic sur une ligne, et la carte
+zoome sur son dossier parent et sélectionne l'entrée. Avec la couleur « par ce
+qui a changé », la liste du niveau courant dans l'inspecteur montre les octets
+écrits plutôt que la taille, triés par écart : c'est la lecture « qu'est-ce qui
+a mangé quarante gigaoctets » sans quitter la fenêtre.
+
+### Suivre les changements
+
+`⌘⇧L` pose un observateur FSEvents sur le dossier. Chaque écriture relance une
+mesure en arrière-plan — sans voile, un simple « nouvelle mesure… » dans le
+pied — et la mesure précédente devient le repère : la carte colore exactement
+ce qui vient de bouger. On lance un build, on regarde `DerivedData` rougir.
+
+Le déclencheur est incrémental ; la mesure ne l'est pas. Les familles de clones
+et les octets récupérables sont réglés sur l'ensemble du scan, et un arbre
+rapiécé dossier par dossier s'éloignerait lentement du disque. Une mesure de
+deux secondes vaut moins cher que cette dérive. Les événements sont regroupés :
+un build écrit des milliers de fichiers en quelques secondes, et une mesure à
+la fin vaut plus que dix au milieu ; un dossier lent n'est remesuré qu'au bout
+de quelques durées de scan.
+
 ### Les repères
 
 `⌘S` dans l'app, `--save auto` en ligne de commande : l'état du dossier est
@@ -259,6 +291,29 @@ refaire. Seules les tailles *propres* à chaque nœud sont stockées ; les totau
 de sous-arbre sont recalculés au chargement, ce qui évite qu'ils divergent.
 
 220 000 fichiers et 42 000 dossiers tiennent dans 22 Mo, relus en 68 ms.
+
+## Le disque entier
+
+`⌘⇧O` dans l'app, `--disk` en ligne de commande. Ce n'est pas un scan de `/` :
+depuis Catalina, `/` est le volume système scellé, et `/Users`, `/Applications`
+ou `/Library` sont des firmlinks vers le volume Data. Cadastre mesure le volume
+Data à son point de montage réel, `/System/Volumes/Data`, là où vit tout ce
+qu'une personne peut supprimer, et y ajoute, en tuiles grises, les autres
+volumes du conteneur — le système scellé, Preboot, Recovery, VM — avec leur
+occupation lue dans `diskutil`. La carte totalise alors l'espace occupé du
+disque, pas celui d'un dossier.
+
+L'espace libre est un réglage (Présentation › Afficher l'espace libre), éteint
+par défaut : sur un disque à moitié vide il fait les trois quarts de la carte
+et écrase tout le reste. Le chiffre reste dans l'inspecteur de la racine, avec
+la part purgeable.
+
+Le catalogue et les gardes voient à travers le préfixe :
+`/System/Volumes/Data/Users/x/Library/Caches` est reconnu comme
+`~/Library/Caches`, et n'est pas pris pour une zone de `/System`. Sans accès
+disque complet, l'app le dit avant de mesurer, avec le bouton qui ouvre le bon
+réglage — 207 dossiers refusés sur un Mac ordinaire, et un total annoncé comme
+plancher.
 
 ## Sûr à supprimer
 
@@ -411,14 +466,22 @@ Sources/cadastre/UI/
   LabelPass.swift        étiquettes, encre choisie par contraste mesuré
   Legend.swift           légende permanente, légendée
   Window.swift           fenêtre, barre d'outils, menus, fil d'Ariane, inspecteur, état vide
-  Session.swift          dossier analysé, repères, scan en arrière-plan, dossiers récents
+  Session.swift          dossier analysé, repères, scan en arrière-plan, disque entier, récents
+  FileWatcher.swift      FSEvents : le déclencheur du mode « suivre les changements »
+  DiffSheet.swift        « ce qui a bougé » en table, avec retour à la carte
   ReclaimSheet.swift     catalogue cochable, gain combiné, re-vérification
   Snapshot.swift         export PNG hors écran
   Icon.swift             icône, pavée par le même algorithme que la carte
+Tests/cadastreTests/
+  AccountingTests.swift  familles, layout, unités, gardes, diff — sur des arbres synthétiques
 Scripts/
   verify.sh              vérité terrain : chaque cas a une réponse connue par construction
   bundle.sh              construit Cadastre.app (signature ad hoc)
 ```
+
+`swift test` couvre les coins qu'un vrai disque ne produit pas sur commande :
+une famille à cheval sur deux dossiers, un lien dur dont les deux noms doivent
+partir ensemble, un cadre racine sans bandeau, les unités dans les deux langues.
 
 `Scripts/verify.sh` construit de vrais fichiers sur un vrai volume APFS — ces
 nombres viennent du système de fichiers, ils ne peuvent pas être testés à
@@ -427,9 +490,12 @@ géométrie du treemap est exacte au 1 % près, et que le bundle se construit.
 
 ## Reste à faire
 
-- `--watch` : rafraîchissement incrémental par FSEvents plutôt qu'un rescan
-- Élargir le catalogue (Docker.raw, qui relève d'un conseil `docker system
-  prune` plutôt que d'une suppression ; Mail Downloads ; caches Homebrew)
+- Une mesure vraiment incrémentale derrière FSEvents : ne relire que les
+  dossiers touchés, et ne régler à nouveau que les familles qu'ils contiennent
+- La taille des snapshots locaux, que `tmutil` ne donne pas ; ils restent une
+  ligne d'avertissement et non une tuile
+- La carte pour VoiceOver : la table du niveau est l'alternative prévue, mais
+  les rectangles eux-mêmes n'exposent rien
 - Changer de langue sans relancer : chaque contrôle a été construit avec la
   langue précédente, et les reconstruire tous à chaud n'a pas encore été jugé
   valoir le code que ça coûte

@@ -36,8 +36,26 @@ final class TreemapModel {
 
     var count: Int { name.count }
 
+    /// Something on the map that is not in the scanned tree: a sibling volume
+    /// of the same APFS container, or the free space. Whole-disk mode adds
+    /// these under the root so the map adds up to the disk, not to a folder.
+    struct Extra {
+        var name: String
+        var detail: String
+        var bytes: Int64
+        var kind: Kind
+    }
+
+    /// Synthetic entries carry no path and no context menu.
+    func isSynthetic(_ node: Int32) -> Bool {
+        kind[Int(node)] == .volume || kind[Int(node)] == .free
+    }
+
     enum Kind: UInt8, CaseIterable {
         case directory, code, image, video, audio, archive, document, data, binary, other
+        /// Whole-disk mode only: a volume that shares the container, and the
+        /// space nothing occupies.
+        case volume, free
 
         static func of(fileNamed name: String) -> Kind {
             guard let dot = name.lastIndex(of: "."), dot != name.startIndex else { return .other }
@@ -74,6 +92,8 @@ final class TreemapModel {
             case .data: return tr(en: "data", fr: "données")
             case .binary: return tr(en: "binary", fr: "binaire")
             case .other: return tr(en: "other", fr: "autre")
+            case .volume: return tr(en: "volume", fr: "volume")
+            case .free: return tr(en: "free space", fr: "espace libre")
             }
         }
     }
@@ -101,7 +121,8 @@ final class TreemapModel {
     /// where only unrelated things moved — produce the same picture.
     static func build(from result: ScanResult, metric: Metric,
                       reclaim: [Reclaim.Candidate] = [],
-                      baseline: Snapshot? = nil) -> TreemapModel {
+                      baseline: Snapshot? = nil,
+                      extras: [Extra] = []) -> TreemapModel {
         let model = TreemapModel()
         let tree = result.tree
         let filesByDirectory = result.files?.groupedByDirectory(directoryCount: tree.count)
@@ -145,6 +166,8 @@ final class TreemapModel {
                 /// Reclaim tag found anywhere along the chain: the outermost
                 /// wins, since it is the one the catalogue would offer.
                 var reclaimTag: UInt8? = nil
+                /// Set for synthetic entries, which are neither files nor folders.
+                var kind: Kind? = nil
             }
             // A directory holding nothing but one subdirectory tells the eye
             // nothing and costs a title strip. Chase the chain down and show
@@ -179,6 +202,16 @@ final class TreemapModel {
                 }
             }
 
+            if modelIndex == 0 {
+                for extra in extras where extra.bytes > 0 {
+                    var sizes = Sizes()
+                    sizes.logical = extra.bytes; sizes.allocated = extra.bytes; sizes.attributed = extra.bytes
+                    sizes.exclusive = extra.bytes; sizes.retained = extra.bytes
+                    children.append(Child(name: extra.name, sizes: sizes, isDirectory: false, source: -1, kind: extra.kind))
+                    model.sizes[0] += sizes
+                    model.value[0] += metric.value(sizes)
+                }
+            }
             children.removeAll { metric.value($0.sizes) <= 0 }
             children.sort {
                 let a = metric.value($0.sizes), b = metric.value($1.sizes)
@@ -223,7 +256,7 @@ final class TreemapModel {
                 let index = model.append(name: child.name, parent: modelIndex, depth: childDepth,
                                          sizes: child.sizes, metric: metric,
                                          isDirectory: child.isDirectory,
-                                         kind: child.isDirectory ? .directory : Kind.of(fileNamed: child.name))
+                                         kind: child.kind ?? (child.isDirectory ? .directory : Kind.of(fileNamed: child.name)))
                 let inherited = model.reclaimTag[Int(modelIndex)]
                 if child.isDirectory, let tag = child.reclaimTag {
                     model.reclaimTag[Int(index)] = tag
@@ -232,7 +265,12 @@ final class TreemapModel {
                 }
                 let prior: Int32 = child.isDirectory ? (priorDirectory(for: child) ?? -1) : -1
                 priorOfChild.append(prior)
-                if let baseline {
+                if child.kind != nil {
+                    // Synthetic: nothing to compare against, and the reclaim
+                    // tag inherited from the root must not stick to it.
+                    model.reclaimTag[Int(index)] = 255
+                    if baseline != nil { model.delta.append(0); model.contentDelta.append(0) }
+                } else if let baseline {
                     var previous = Sizes()
                     if child.isDirectory, prior >= 0 {
                         previous = baseline.tree.total[Int(prior)]

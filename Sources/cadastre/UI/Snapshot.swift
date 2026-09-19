@@ -111,6 +111,13 @@ enum TreemapSnapshot {
         if model.isDirectory[node] && !entry.isLeaf {
             return RGBA.mix(surface, Palette.primaryInk(mode), 0.05 + 0.02 * Float(min(entry.depth, 4)))
         }
+        // Whole-disk extras keep the same look in every mode: they are
+        // context for the map, not part of what it measures.
+        switch model.kind[node] {
+        case .free: return RGBA.mix(surface, Palette.mutedInk, mode == .light ? 0.12 : 0.22)
+        case .volume: return RGBA.mix(Palette.family(.other, mode), Palette.primaryInk(mode), 0.18)
+        default: break
+        }
         switch colorMode {
         case .kind:
             return Palette.family(Palette.Family.of(model.kind[node]), mode)

@@ -952,9 +952,10 @@ final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate
                              fr: "Aucune entrée du catalogue n'a été reconnue ici."))
             return
         }
-        let sheet = ReclaimSheet(session: session) { [weak self] moved in
+        let sheet = ReclaimSheet(session: session) { [weak self] moves in
             guard let self else { return }
-            if moved > 0 { self.rescan() }
+            self.registerUndo(moves: moves)
+            if !moves.isEmpty { self.rescan() }
         }
         reclaimSheet = sheet
         sheet.present(over: window)
@@ -1067,41 +1068,69 @@ final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate
         colorChanged()
     }
 
+    /// Switching language rebuilds the window rather than relabelling it:
+    /// every control, menu and sheet was built with `tr()` at construction,
+    /// so a fresh controller is the one place that gets all of them. The
+    /// scan is redone too — the catalogue's labels live in the session.
     @objc func chooseLanguage(_ sender: NSMenuItem) {
         guard let language = sender.representedObject as? Language, language != L10n.language else { return }
         L10n.store(language)
-        let alert = NSAlert()
-        // Both languages, on purpose: the person may be switching away from
-        // one they do not read.
-        alert.messageText = language == .fr ? "Relancer Cadastre en français ?" : "Relaunch Cadastre in English?"
-        alert.informativeText = language == .fr
-            ? "La langue s'applique au prochain lancement. / The language applies at next launch."
-            : "The language applies at next launch. / La langue s'applique au prochain lancement."
-        alert.addButton(withTitle: language == .fr ? "Relancer" : "Relaunch")
-        alert.addButton(withTitle: language == .fr ? "Plus tard" : "Later")
-        alert.beginSheetModal(for: window) { [weak self] response in
-            guard response == .alertFirstButtonReturn else { return }
-            self?.relaunch()
+        L10n.language = language
+
+        let fresh = CadastreWindow(metric: defaultMetric, baseline: nil)
+        fresh.colorPicker.selectItem(at: colorPicker.indexOfSelectedItem)
+        fresh.colorChanged()
+        fresh.window.setFrame(window.frame, display: false)
+        if let session {
+            fresh.pendingTrail = trail()
+            fresh.pendingBaseline = session.baselineIsPreviousMeasure ? nil : session.baseline
+            fresh.pendingBaselinePath = session.baselinePath
+            if session.isWholeDisk {
+                fresh.pendingWholeDisk = WholeDisk.Context(displayName: session.displayName ?? "", extras: session.extras,
+                                                           hasFullDiskAccess: true)
+            }
         }
+        (NSApp.delegate as? AppDelegate)?.controller = fresh
+        NSApp.mainMenu = fresh.buildMenu()
+        fresh.window.makeKeyAndOrderFront(nil)
+        if let session { fresh.scan(path: session.path) }
+
+        scanTask?.cancel()
+        watcher?.stop()
+        window.delegate = nil
+        window.close()
     }
 
-    private func relaunch() {
-        let arguments = session.map { ["--ui", $0.path] } ?? ["--ui"]
-        if Bundle.main.bundlePath.hasSuffix(".app") {
-            let configuration = NSWorkspace.OpenConfiguration()
-            configuration.createsNewApplicationInstance = true
-            configuration.arguments = arguments
-            NSWorkspace.shared.openApplication(at: Bundle.main.bundleURL, configuration: configuration) { _, _ in
-                DispatchQueue.main.async { NSApp.terminate(nil) }
+    // MARK: - Undo
+
+    /// Moving to the Trash is reversible by construction; this makes it
+    /// reversible from the keyboard too. The item is moved back to where it
+    /// was, and the folder re-measured.
+    private let undoStack = UndoManager()
+
+    func windowWillReturnUndoManager(_ window: NSWindow) -> UndoManager? { undoStack }
+
+    private func registerUndo(moves: [(trashed: URL, original: URL)]) {
+        guard !moves.isEmpty else { return }
+        undoStack.registerUndo(withTarget: self) { me in
+            var restored = 0
+            for move in moves where (try? FileManager.default.moveItem(at: move.trashed, to: move.original)) != nil {
+                restored += 1
             }
-        } else if let executable = Bundle.main.executableURL {
-            let process = Process()
-            process.executableURL = executable
-            process.arguments = arguments
-            try? process.run()
-            NSApp.terminate(nil)
+            if restored < moves.count {
+                me.flash(tr(en: "Could not put everything back", fr: "Impossible de tout remettre"),
+                         detail: tr(en: "%d of %d items restored. The rest is still in the Trash.",
+                                    fr: "%d éléments sur %d remis en place. Le reste est toujours dans la corbeille.",
+                                    restored, moves.count), warning: true)
+            }
+            me.rescan()
         }
+        undoStack.setActionName(moves.count == 1
+            ? tr(en: "Move to Trash", fr: "Mettre à la corbeille")
+            : tr(en: "Move %d Items to Trash", fr: "Mettre %d éléments à la corbeille", moves.count))
     }
+
+    @objc func undoTrash() { undoStack.undo() }
 
     @objc private func metricChanged() {
         let chosen = Metric.allCases[metricPicker.indexOfSelectedItem]
@@ -1311,7 +1340,11 @@ final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate
         alert.beginSheetModal(for: window) { [weak self] response in
             guard response == .alertFirstButtonReturn else { return }
             do {
-                try FileManager.default.trashItem(at: URL(fileURLWithPath: path), resultingItemURL: nil)
+                var trashed: NSURL?
+                try FileManager.default.trashItem(at: URL(fileURLWithPath: path), resultingItemURL: &trashed)
+                if let trashed = trashed as URL? {
+                    self?.registerUndo(moves: [(trashed, URL(fileURLWithPath: path))])
+                }
                 // Rescan rather than patch the numbers on screen. Every figure
                 // here is a claim about the disk, and a stale one after a
                 // deletion is exactly the lie this program exists to avoid.
@@ -1581,6 +1614,9 @@ final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate
         case #selector(toggleLive):
             menuItem.state = isLive ? .on : .off
             return true
+        case #selector(undoTrash):
+            menuItem.title = undoStack.canUndo ? undoStack.undoMenuItemTitle : tr(en: "Undo", fr: "Annuler")
+            return undoStack.canUndo && scanTask == nil
         case #selector(toggleFreeSpace):
             menuItem.state = Session.showsFreeSpace ? .on : .off
             return session?.isWholeDisk ?? WholeDisk.isAvailable
@@ -1683,6 +1719,8 @@ final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate
 
         // Edit
         mainMenu.addItem(submenu(tr(en: "Edit", fr: "Édition"), [
+            item(tr(en: "Undo", fr: "Annuler"), #selector(undoTrash), "z"),
+            .separator(),
             item(tr(en: "Copy Path", fr: "Copier le chemin"), #selector(copyPath(_:)), "c"),
             .separator(),
             item(tr(en: "Find…", fr: "Rechercher…"), #selector(focusSearch), "f"),
@@ -1802,7 +1840,7 @@ extension CadastreWindow: NSToolbarDelegate {
 /// Dock drops and "Open With" arrive here; everything else goes through the
 /// window. The bundle declares folders as an openable type for that reason.
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    let controller: CadastreWindow
+    var controller: CadastreWindow
     init(controller: CadastreWindow) { self.controller = controller }
 
     func application(_ application: NSApplication, open urls: [URL]) {

@@ -54,6 +54,18 @@ private final class MetalHostView: NSView {
     override func hitTest(_ point: NSPoint) -> NSView? { nil }
 }
 
+/// One rectangle, for VoiceOver. Pressing it does what a double-click does.
+private final class TileElement: NSAccessibilityElement {
+    var node: Int32 = 0
+    weak var view: TreemapView?
+
+    override func accessibilityPerformPress() -> Bool {
+        guard let view else { return false }
+        view.activate(node: node)
+        return true
+    }
+}
+
 /// What a search found, for the status line.
 struct SearchSummary {
     var matches = 0
@@ -100,6 +112,7 @@ final class TreemapView: NSView {
     /// forty thousand rectangles per frame is the difference between a
     /// window that follows the pointer and one that stutters behind it.
     private var layoutSize = CGSize.zero
+    private var tiles: [TileElement] = []
 
     // Zoom is a transform on the current layout, swapped for a fresh layout
     // once the animation lands. Re-laying out every frame would be both slower
@@ -180,7 +193,51 @@ final class TreemapView: NSView {
                                                height: Float(bounds.height)))
         hoverIndex = -1
         selectedIndex = selectedNode.flatMap { node in rects.firstIndex { $0.node == node } } ?? -1
+        rebuildTiles()
         refreshColors()
+    }
+
+    // MARK: - Accessibility
+
+    /// The level table in the inspector is the tabular alternative; this is
+    /// the map itself: the first two levels, largest first, as pressable
+    /// elements named by what they are and how big.
+    private func rebuildTiles() {
+        guard let model else { tiles = []; return }
+        let candidates = rects.filter { $0.depth == 1 || ($0.depth == 2 && $0.rect.area >= 400) }
+            .sorted { $0.rect.area > $1.rect.area }
+            .prefix(150)
+        tiles = candidates.map { entry in
+            let node = Int(entry.node)
+            let tile = TileElement()
+            tile.node = entry.node
+            tile.view = self
+            tile.setAccessibilityRole(.button)
+            tile.setAccessibilityParent(self)
+            tile.setAccessibilityFrameInParentSpace(NSRect(x: CGFloat(entry.rect.x), y: CGFloat(entry.rect.y),
+                                                           width: CGFloat(entry.rect.width), height: CGFloat(entry.rect.height)))
+            let kind = model.isDirectory[node] ? tr(en: "folder", fr: "dossier") : model.kind[node].label
+            tile.setAccessibilityLabel("\(model.name[node]), \(humanBytes(model.value[node])), \(kind)")
+            tile.setAccessibilityHelp(model.isDirectory[node]
+                ? tr(en: "Press to zoom into this folder", fr: "Appuyer pour zoomer dans ce dossier")
+                : tr(en: "Press to reveal in the Finder", fr: "Appuyer pour révéler dans le Finder"))
+            return tile
+        }
+    }
+
+    override func isAccessibilityElement() -> Bool { true }
+    override func accessibilityRole() -> NSAccessibility.Role? { .group }
+    override func accessibilityLabel() -> String? { tr(en: "Treemap", fr: "Carte") }
+    override func accessibilityChildren() -> [Any]? { tiles }
+
+    fileprivate func activate(node: Int32) {
+        guard let model else { return }
+        if model.isDirectory[Int(node)], node != rootNode, let hit = rects.first(where: { $0.node == node }), !hit.isLeaf {
+            zoom(into: node, from: hit.rect)
+        } else {
+            select(node: node)
+            onActivate?(node)
+        }
     }
 
     private func rebuildMatchMask() {

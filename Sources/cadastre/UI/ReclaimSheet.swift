@@ -50,7 +50,7 @@ final class ReclaimSheet: NSObject, NSTableViewDataSource, NSTableViewDelegate {
     private let session: Session
     private let candidates: [Reclaim.Candidate]
     private var chosen: Set<Int>
-    private let onFinish: (Int) -> Void
+    private let onFinish: ([(trashed: URL, original: URL)]) -> Void
 
     private let panel: NSWindow
     private let table = NSTableView()
@@ -58,7 +58,7 @@ final class ReclaimSheet: NSObject, NSTableViewDataSource, NSTableViewDelegate {
     private let summary = NSTextField(labelWithString: "")
     private let action = NSButton()
 
-    init(session: Session, onFinish: @escaping (Int) -> Void) {
+    init(session: Session, onFinish: @escaping ([(trashed: URL, original: URL)]) -> Void) {
         self.session = session
         // Biggest gain first, and the "your call" entries last — they can be
         // looked at but never ticked.
@@ -204,14 +204,16 @@ final class ReclaimSheet: NSObject, NSTableViewDataSource, NSTableViewDelegate {
         alert.addButton(withTitle: tr(en: "Cancel", fr: "Annuler"))
         alert.beginSheetModal(for: panel) { [weak self] response in
             guard let self, response == .alertFirstButtonReturn else { return }
-            var moved = 0
+            var moved: [(trashed: URL, original: URL)] = []
             for candidate in picked {
                 // Verified again here, not trusted from the scan: the catalogue
                 // matched minutes ago and the disk has kept moving since.
                 guard Reclaim.verify(candidate.path, rule: candidate.rule) == nil else { continue }
-                if (try? FileManager.default.trashItem(at: URL(fileURLWithPath: candidate.path),
-                                                       resultingItemURL: nil)) != nil {
-                    moved += 1
+                var trashed: NSURL?
+                let original = URL(fileURLWithPath: candidate.path)
+                if (try? FileManager.default.trashItem(at: original, resultingItemURL: &trashed)) != nil,
+                   let trashed = trashed as URL? {
+                    moved.append((trashed, original))
                 }
             }
             self.panel.sheetParent?.endSheet(self.panel)

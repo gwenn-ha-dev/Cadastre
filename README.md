@@ -40,7 +40,12 @@ the Dock icon is measured too.
 | `⌘.` | stop a scan in progress — the map is shown as is, marked partial |
 
 The Cadastre › Language menu forces French or English, independent of the
-system; it applies on the next launch.
+system, without relaunching: the window is rebuilt and the folder measured again.
+
+`⌘Z` puts back what just went to the Trash — one entry from the context menu
+as well as a whole selection from the "reclaim" panel — and measures again.
+Under VoiceOver, the map exposes its first two levels as buttons named by
+their size and kind; activating one goes into the folder or reveals the file.
 
 The "compare to" menu in the toolbar lists the markers already dropped on
 this folder. After a deletion, the map is **re-measured**, never patched:
@@ -382,6 +387,12 @@ permission-request descriptions (Desktop, Documents…) are the only strings
 outside the binary: macOS reads them from `InfoPlist.strings`, which
 `bundle.sh` writes in both languages.
 
+Switching language from the menu rebuilds the window rather than relabelling
+its controls: every menu, panel and header was built by `tr()` when it was
+created, and a fresh controller is the one place that catches all of them. The
+deletion catalogue is re-evaluated on each access for the same reason — its
+labels live in the session, and the folder is measured again.
+
 ## Interface notes
 
 The two toolbar menus aren't named after the code: the displayed metric is
@@ -464,6 +475,8 @@ Tests/cadastreTests/
 Scripts/
   verify.sh              ground truth: every case has an answer known by construction
   bundle.sh              builds Cadastre.app (ad hoc signature)
+  release.sh             the same, signed and notarised when CODESIGN_IDENTITY
+                         and NOTARY_PROFILE are set, zipped into dist/ with the CLI
 ```
 
 `swift test` covers the corners a real disk does not produce on demand: a
@@ -481,10 +494,7 @@ geometry is accurate to within 1%, and that the bundle builds.
   that changed, and settle again only the families they hold
 - The size of local snapshots, which `tmutil` does not give; they stay a
   warning line rather than a tile
-- The map for VoiceOver: the level table is the intended alternative, but
-  the rectangles themselves expose nothing
-- Switch language without relaunching: every control was built with the
-  previous language, and rebuilding all of them live hasn't yet been judged
-  worth the code it costs
-- The signature is ad hoc: the app runs on this machine, it isn't
-  distributable as is
+- An animated transition between two measures: switching the area metric
+  reorganises every rectangle at once, and the eye loses what it was following
+- The signature is ad hoc without a Developer ID identity: `Scripts/release.sh`
+  knows how to sign and notarise, it only lacks the credentials

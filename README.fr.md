@@ -40,7 +40,13 @@ Dock est mesuré aussi.
 | `⌘.` | arrêter un scan en cours — la carte est affichée telle quelle, marquée partielle |
 
 Le menu Cadastre › Langue force le français ou l'anglais, indépendamment du
-système ; ça s'applique au prochain lancement.
+système, sans relancer : la fenêtre est reconstruite et le dossier remesuré.
+
+`⌘Z` remet en place ce qui vient de partir à la corbeille — une entrée du menu
+contextuel comme toute une sélection du panneau « récupérer » — et remesure.
+Sous VoiceOver, la carte expose ses deux premiers niveaux comme des boutons
+nommés par leur taille et leur nature ; les activer descend dans le dossier ou
+révèle le fichier.
 
 Le menu « comparer à » de la barre d'outils liste les repères déjà posés sur ce
 dossier. Après une suppression, la carte est **re-mesurée**, jamais rapiécée :
@@ -390,6 +396,13 @@ Finder. Les descriptions des demandes d'accès (Bureau, Documents…) sont les
 seules chaînes hors du binaire : macOS les lit dans `InfoPlist.strings`, que
 `bundle.sh` écrit dans les deux langues.
 
+Changer de langue depuis le menu reconstruit la fenêtre plutôt que de
+réétiqueter ses contrôles : chaque menu, chaque panneau, chaque en-tête a été
+construit par `tr()` à sa création, et un contrôleur neuf est le seul endroit
+qui les rattrape tous. Le catalogue de suppression est réévalué à chaque accès
+pour la même raison — ses libellés vivent dans la session, et le dossier est
+remesuré.
+
 ## Notes d'interface
 
 Les deux menus de la barre d'outils ne sont pas nommés d'après le code : la
@@ -477,6 +490,8 @@ Tests/cadastreTests/
 Scripts/
   verify.sh              vérité terrain : chaque cas a une réponse connue par construction
   bundle.sh              construit Cadastre.app (signature ad hoc)
+  release.sh             la même chose signée et notarisée si CODESIGN_IDENTITY
+                         et NOTARY_PROFILE sont posés, zippée dans dist/ avec le CLI
 ```
 
 `swift test` couvre les coins qu'un vrai disque ne produit pas sur commande :
@@ -494,10 +509,7 @@ géométrie du treemap est exacte au 1 % près, et que le bundle se construit.
   dossiers touchés, et ne régler à nouveau que les familles qu'ils contiennent
 - La taille des snapshots locaux, que `tmutil` ne donne pas ; ils restent une
   ligne d'avertissement et non une tuile
-- La carte pour VoiceOver : la table du niveau est l'alternative prévue, mais
-  les rectangles eux-mêmes n'exposent rien
-- Changer de langue sans relancer : chaque contrôle a été construit avec la
-  langue précédente, et les reconstruire tous à chaud n'a pas encore été jugé
-  valoir le code que ça coûte
-- La signature est ad hoc : l'app tourne sur cette machine, elle n'est pas
-  distribuable telle quelle
+- Une transition animée entre deux mesures : quand on change de surface, les
+  rectangles se réorganisent d'un coup, et l'œil perd ce qu'il suivait
+- La signature est ad hoc sans identité Developer ID : `Scripts/release.sh`
+  sait signer et notariser, il lui manque les identifiants

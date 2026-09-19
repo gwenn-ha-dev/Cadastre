@@ -89,7 +89,7 @@ enum Reclaim {
 
     static func expand(_ path: String) -> String { (path as NSString).expandingTildeInPath }
 
-    static let catalogue: [Rule] = [
+    static var catalogue: [Rule] { [
         // --- Build output: evidence is the file the tool rebuilds it from ---
         Rule(id: "node_modules", label: tr(en: "npm dependencies", fr: "dépendances npm"), confidence: .regenerable,
              match: .named("node_modules"),
@@ -214,7 +214,7 @@ enum Reclaim {
         Rule(id: "android-avd", label: tr(en: "Android virtual devices", fr: "appareils virtuels Android"), confidence: .review,
              match: .childrenOf(expand("~/.android/avd")),
              recovery: tr(en: "recreated from Android Studio — their state is lost", fr: "recréés depuis Android Studio — leur état est perdu")),
-    ]
+    ] }
 
     // MARK: - Guards
 

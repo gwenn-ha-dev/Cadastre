@@ -110,7 +110,7 @@ final class DiffSheet: NSObject, NSTableViewDataSource, NSTableViewDelegate {
         table.target = self
         table.usesAlternatingRowBackgroundColors = false
         table.floatsGroupRows = true
-        for (identifier, width) in [("delta", 92), ("path", 480), ("note", 150)] {
+        for (identifier, width) in [("delta", 92), ("path", 410), ("note", 220)] {
             let column = NSTableColumn(identifier: .init(identifier))
             column.width = CGFloat(width)
             if identifier == "path" { column.resizingMask = .autoresizingMask }
@@ -223,6 +223,7 @@ final class DiffSheet: NSObject, NSTableViewDataSource, NSTableViewDelegate {
                 field.font = .systemFont(ofSize: 10.5)
                 field.textColor = .secondaryLabelColor
                 field.lineBreakMode = .byTruncatingTail
+                field.toolTip = note.isEmpty ? nil : note   // still whole in a narrow window
                 return field
             default:
                 let field = NSTextField(labelWithString: relative(change.path))

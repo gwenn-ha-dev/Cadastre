@@ -37,42 +37,37 @@ enum Metric: String, CaseIterable {
     /// anyone who has not read the source.
     var title: String {
         switch self {
-        case .logical: return tr(en: "Logical size", fr: "Taille logique")
-        case .allocated: return tr(en: "Allocated blocks", fr: "Blocs alloués")
-        case .attributed: return tr(en: "Real footprint", fr: "Occupation réelle")
-        case .exclusive: return tr(en: "Exclusive to entry", fr: "Exclusif à l'entrée")
-        case .retained: return tr(en: "Reclaimable", fr: "Récupérable")
+        case .logical: return tr("Logical size")
+        case .allocated: return tr("Allocated blocks")
+        case .attributed: return tr("Real footprint")
+        case .exclusive: return tr("Exclusive to entry")
+        case .retained: return tr("Reclaimable")
         }
     }
 
     /// Shorter, for table headers and the inspector.
     var shortTitle: String {
         switch self {
-        case .logical: return tr(en: "logical", fr: "logique")
-        case .allocated: return tr(en: "allocated", fr: "alloué")
-        case .attributed: return tr(en: "real", fr: "réel")
-        case .exclusive: return tr(en: "exclusive", fr: "exclusif")
-        case .retained: return tr(en: "reclaimable", fr: "récupérable")
+        case .logical: return tr("logical")
+        case .allocated: return tr("allocated")
+        case .attributed: return tr("real")
+        case .exclusive: return tr("exclusive")
+        case .retained: return tr("reclaimable")
         }
     }
 
     var explanation: String {
         switch self {
         case .logical:
-            return tr(en: "sum of the forks, uncompressed — what the Finder shows",
-                      fr: "somme des forks, non compressée — ce que montre le Finder")
+            return tr("sum of the forks, uncompressed — what the Finder shows")
         case .allocated:
-            return tr(en: "what is on disk, a clone counted in every file — like du",
-                      fr: "ce qui est sur le disque, un clone compté dans chaque fichier — comme du")
+            return tr("what is on disk, a clone counted in every file — like du")
         case .attributed:
-            return tr(en: "fair share of shared blocks — the only measure whose sum is right",
-                      fr: "part équitable des blocs partagés — la seule mesure dont la somme est juste")
+            return tr("fair share of shared blocks — the only measure whose sum is right")
         case .exclusive:
-            return tr(en: "what deleting this one entry frees",
-                      fr: "ce que libère la suppression de cette entrée seule")
+            return tr("what deleting this one entry frees")
         case .retained:
-            return tr(en: "what deleting the whole subtree frees",
-                      fr: "ce que libère la suppression de tout le sous-arbre")
+            return tr("what deleting the whole subtree frees")
         }
     }
 

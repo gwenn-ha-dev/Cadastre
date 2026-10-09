@@ -44,10 +44,10 @@ enum ScanIndex {
 
         var description: String {
             switch self {
-            case .notAnIndex(let path): return tr(en: "%@ is not a Cadastre index", fr: "%@ n'est pas un index Cadastre", path)
+            case .notAnIndex(let path): return tr("%@ is not a Cadastre index", path)
             case .unsupportedVersion(let v):
-                return tr(en: "index version %d, expected %d", fr: "index de version %d, attendue %d", v, ScanIndex.version)
-            case .truncated(let path): return tr(en: "truncated index: %@", fr: "index tronqué : %@", path)
+                return tr("index version %d, expected %d", v, ScanIndex.version)
+            case .truncated(let path): return tr("truncated index: %@", path)
             }
         }
     }

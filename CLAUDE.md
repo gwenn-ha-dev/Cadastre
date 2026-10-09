@@ -37,8 +37,19 @@ through the `Makefile`. It is the same interface in every project here.
   this program exists to avoid.
 - **Evicted iCloud files are never downloaded** (`IOPOL_MATERIALIZE_DATALESS_FILES_OFF`
   before the first `open`).
-- **No hard-coded user-visible strings.** Adding a string means adding both
-  languages in the same change.
+- **No hard-coded user-visible strings.** Every one goes through `tr("English
+  text")` (or `tr("format %@", args…)`), whose key is the English phrase,
+  looked up in `Resources/Localizable.xcstrings`. Adding a string means adding
+  its entry, with `fr`, in the same change; `testEmbeddedCatalogueHasEveryEntryInFrench`
+  and `make lint` catch a missing one. The catalogue is embedded in the binary
+  by the `CadastreStrings` target (through the symlink
+  `Sources/CadastreStrings/Localizable.xcstrings`), because the same executable
+  runs from a terminal with no bundle around it.
+- **The language comes from the system** (charter §6): `--lang` and
+  `CADASTRE_LANG` exist for the CLI, there is no setting in the app. Numbers
+  and dates go through `FormatStyle` / `DateFormatter` with
+  `L10n.language.locale`, never a hand-assembled string. The permission prompts
+  and the Finder's "Folder" kind are in `Resources/<lang>.lproj/InfoPlist.strings`.
 - **No build artefacts committed.** No `.app`, no `build/`, no `.build/`, no `dist/`.
 - **Dependencies: none.** Adding one requires documenting it in the README's
   *Dependencies* section.
@@ -58,8 +69,10 @@ through the `Makefile`. It is the same interface in every project here.
 .github/workflows/ci.yml
 Makefile
 Package.swift          C target + executable + tests, macOS 14
-Resources/             Info.plist, AppIcon.icns, en.lproj / fr.lproj
+Resources/             Info.plist, AppIcon.icns, Localizable.xcstrings,
+                       en.lproj / fr.lproj (InfoPlist.strings)
 Sources/CadastreC/     getattrlistbulk, I/O policies
+Sources/CadastreStrings/  the embedded string catalogue
 Sources/cadastre/      walker, accounting, index, diff, reclaim, CLI
 Sources/cadastre/UI/   treemap (Metal), window, sheets
 Tests/CadastreTests/   XCTest on synthetic trees

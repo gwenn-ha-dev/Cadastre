@@ -9,26 +9,21 @@ enum ColorMode: String, CaseIterable {
 
     var label: String {
         switch self {
-        case .kind: return tr(en: "By file type", fr: "Par type de fichier")
-        case .depth: return tr(en: "By depth", fr: "Par profondeur")
-        case .sharing: return tr(en: "By shared blocks", fr: "Par blocs partagés")
-        case .delta: return tr(en: "By what changed", fr: "Par ce qui a changé")
-        case .reclaim: return tr(en: "By reclaimability", fr: "Par récupérabilité")
+        case .kind: return tr("By file type")
+        case .depth: return tr("By depth")
+        case .sharing: return tr("By shared blocks")
+        case .delta: return tr("By what changed")
+        case .reclaim: return tr("By reclaimability")
         }
     }
 
     var explanation: String {
         switch self {
-        case .kind: return tr(en: "six families of extensions, grey for the rest",
-                              fr: "six familles d'extensions, gris pour le reste")
-        case .depth: return tr(en: "the deeper the folder, the stronger the tint",
-                               fr: "plus le dossier est profond, plus la teinte est soutenue")
-        case .sharing: return tr(en: "the darker, the more of its blocks are shared with something else",
-                                 fr: "plus c'est foncé, plus les blocs sont partagés avec autre chose")
-        case .delta: return tr(en: "what was written or deleted since the loaded marker",
-                               fr: "ce qui a été écrit ou supprimé depuis le repère chargé")
-        case .reclaim: return tr(en: "what the catalogue deems safe to delete, and on what grounds",
-                                 fr: "ce que le catalogue estime sûr à supprimer, et à quel titre")
+        case .kind: return tr("six families of extensions, grey for the rest")
+        case .depth: return tr("the deeper the folder, the stronger the tint")
+        case .sharing: return tr("the darker, the more of its blocks are shared with something else")
+        case .delta: return tr("what was written or deleted since the loaded marker")
+        case .reclaim: return tr("what the catalogue deems safe to delete, and on what grounds")
         }
     }
 }
@@ -216,18 +211,18 @@ final class TreemapView: NSView {
             tile.setAccessibilityParent(self)
             tile.setAccessibilityFrameInParentSpace(NSRect(x: CGFloat(entry.rect.x), y: CGFloat(entry.rect.y),
                                                            width: CGFloat(entry.rect.width), height: CGFloat(entry.rect.height)))
-            let kind = model.isDirectory[node] ? tr(en: "folder", fr: "dossier") : model.kind[node].label
-            tile.setAccessibilityLabel("\(model.name[node]), \(humanBytes(model.value[node])), \(kind)")
+            let kind = model.isDirectory[node] ? tr("folder") : model.kind[node].label
+            tile.setAccessibilityLabel(tr("%@, %@, %@", model.name[node], humanBytes(model.value[node]), kind))
             tile.setAccessibilityHelp(model.isDirectory[node]
-                ? tr(en: "Press to zoom into this folder", fr: "Appuyer pour zoomer dans ce dossier")
-                : tr(en: "Press to reveal in the Finder", fr: "Appuyer pour révéler dans le Finder"))
+                ? tr("Press to zoom into this folder")
+                : tr("Press to reveal in the Finder"))
             return tile
         }
     }
 
     override func isAccessibilityElement() -> Bool { true }
     override func accessibilityRole() -> NSAccessibility.Role? { .group }
-    override func accessibilityLabel() -> String? { tr(en: "Treemap", fr: "Carte") }
+    override func accessibilityLabel() -> String? { tr("Treemap") }
     override func accessibilityChildren() -> [Any]? { tiles }
 
     fileprivate func activate(node: Int32) {

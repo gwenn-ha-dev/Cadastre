@@ -82,18 +82,18 @@ final class TreemapModel {
 
         var label: String {
             switch self {
-            case .directory: return tr(en: "folder", fr: "dossier")
-            case .code: return tr(en: "code", fr: "code")
-            case .image: return tr(en: "image", fr: "image")
-            case .video: return tr(en: "video", fr: "vidéo")
-            case .audio: return tr(en: "audio", fr: "audio")
-            case .archive: return tr(en: "archive", fr: "archive")
-            case .document: return tr(en: "document", fr: "document")
-            case .data: return tr(en: "data", fr: "données")
-            case .binary: return tr(en: "binary", fr: "binaire")
-            case .other: return tr(en: "other", fr: "autre")
-            case .volume: return tr(en: "volume", fr: "volume")
-            case .free: return tr(en: "free space", fr: "espace libre")
+            case .directory: return tr("folder")
+            case .code: return tr("code")
+            case .image: return tr("image")
+            case .video: return tr("video")
+            case .audio: return tr("audio")
+            case .archive: return tr("archive")
+            case .document: return tr("document")
+            case .data: return tr("data")
+            case .binary: return tr("binary")
+            case .other: return tr("other")
+            case .volume: return tr("volume")
+            case .free: return tr("free space")
             }
         }
     }

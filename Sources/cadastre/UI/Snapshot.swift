@@ -12,9 +12,9 @@ enum TreemapSnapshot {
         case noRenderer, noTexture, encodingFailed
         var description: String {
             switch self {
-            case .noRenderer: return tr(en: "Metal unavailable", fr: "Metal indisponible")
-            case .noTexture: return tr(en: "could not allocate the render target", fr: "impossible d'allouer la cible de rendu")
-            case .encodingFailed: return tr(en: "PNG encoding failed", fr: "encodage PNG impossible")
+            case .noRenderer: return tr("Metal unavailable")
+            case .noTexture: return tr("could not allocate the render target")
+            case .encodingFailed: return tr("PNG encoding failed")
             }
         }
     }

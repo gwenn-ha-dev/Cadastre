@@ -54,7 +54,7 @@ enum LayoutSelfTest {
                     && rect.x + rect.width <= parent.x + parent.width + 0.01
                     && rect.y + rect.height <= parent.y + parent.height + 0.01
                 if !inside {
-                    result.failures.append(tr(en: "%@: a child leaves its frame", fr: "%@ : un enfant sort du cadre", model.name[node]))
+                    result.failures.append(tr("%@: a child leaves its frame", model.name[node]))
                     break
                 }
             }
@@ -66,8 +66,7 @@ enum LayoutSelfTest {
             // about everything a reader takes from the picture. Only checked on
             // rectangles large enough that the inset and title strip are noise.
             if placedArea < Double(container.area) * 0.99 || placedArea > Double(container.area) * 1.01 {
-                result.failures.append(tr(en: "%@: children cover %.1f %% of the inner frame",
-                                          fr: "%@ : les enfants couvrent %.1f %% du cadre intérieur",
+                result.failures.append(tr("%@: children cover %.1f %% of the inner frame",
                                           model.name[node], placedArea / Double(container.area) * 100))
             }
 
@@ -80,8 +79,7 @@ enum LayoutSelfTest {
                     let error = abs(areaShare - valueShare)
                     result.worstProportionError = max(result.worstProportionError, error)
                     if error > 0.01 {
-                        result.failures.append(tr(en: "%@: wrong proportion (%.3f instead of %.3f)",
-                                                  fr: "%@ : proportion fausse (%.3f au lieu de %.3f)",
+                        result.failures.append(tr("%@: wrong proportion (%.3f instead of %.3f)",
                                                   model.name[node], areaShare, valueShare))
                         break
                     }
@@ -92,7 +90,7 @@ enum LayoutSelfTest {
             if count <= 200 {
                 outer: for i in 0..<placed.count {
                     for j in (i + 1)..<placed.count where overlaps(placed[i], placed[j]) {
-                        result.failures.append(tr(en: "%@: two children overlap", fr: "%@ : deux enfants se chevauchent", model.name[node]))
+                        result.failures.append(tr("%@: two children overlap", model.name[node]))
                         break outer
                     }
                 }

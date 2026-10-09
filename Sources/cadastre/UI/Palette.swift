@@ -105,13 +105,13 @@ enum Palette {
 
         var label: String {
             switch self {
-            case .code: return tr(en: "code", fr: "code")
-            case .document: return tr(en: "documents", fr: "documents")
-            case .image: return tr(en: "images", fr: "images")
-            case .video: return tr(en: "video", fr: "vidéo")
-            case .audio: return tr(en: "audio", fr: "audio")
-            case .data: return tr(en: "data", fr: "données")
-            case .other: return tr(en: "other", fr: "autre")
+            case .code: return tr("code")
+            case .document: return tr("documents")
+            case .image: return tr("images")
+            case .video: return tr("video")
+            case .audio: return tr("audio")
+            case .data: return tr("data")
+            case .other: return tr("other")
             }
         }
 

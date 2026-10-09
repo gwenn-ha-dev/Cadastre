@@ -1,5 +1,6 @@
 import XCTest
 @testable import cadastre
+import CadastreStrings
 
 /// A small tree built by hand: the walker's commit path, without the disk.
 private struct Fixture {
@@ -163,7 +164,24 @@ final class FormattingTests: XCTestCase {
         L10n.language = .fr
         XCTAssertEqual(humanBytes(6_360_000_000), "6,36\u{00A0}Go")
         XCTAssertEqual(humanBytes(-16_400), "-16,4\u{00A0}ko")
-        XCTAssertEqual(tr(en: "yes", fr: "oui"), "oui")
+        XCTAssertEqual(tr("Reclaimable"), "Récupérable")
+        L10n.language = .en
+        XCTAssertEqual(tr("Reclaimable"), "Reclaimable")
+    }
+
+    /// The catalogue is embedded in the binary; an empty or unreadable one
+    /// would silently leave a French system in English.
+    func testEmbeddedCatalogueHasEveryEntryInFrench() throws {
+        struct Catalog: Decodable {
+            struct Entry: Decodable { let localizations: [String: [String: [String: String]]]? }
+            let sourceLanguage: String
+            let strings: [String: Entry]
+        }
+        let catalog = try JSONDecoder().decode(Catalog.self, from: StringCatalog.data)
+        XCTAssertEqual(catalog.sourceLanguage, "en")
+        XCTAssertGreaterThan(catalog.strings.count, 300)
+        let untranslated = catalog.strings.filter { $0.value.localizations?["fr"]?["stringUnit"]?["value"] == nil }
+        XCTAssertEqual(untranslated.map(\.key), [])
     }
 
     func testGuardsSeeThroughTheDataVolume() {

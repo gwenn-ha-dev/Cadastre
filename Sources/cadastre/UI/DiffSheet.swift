@@ -31,17 +31,17 @@ final class DiffSheet: NSObject, NSTableViewDataSource, NSTableViewDelegate {
         // whose change is entirely its children's is only a conduit.
         let movers = diff.directories.filter { abs($0.own) >= diff.threshold || $0.status != .changed }
         if !movers.isEmpty {
-            rows.append(.header(tr(en: "Where it moved", fr: "Où ça a bougé")))
+            rows.append(.header(tr("Where it moved")))
             rows.append(contentsOf: movers.prefix(60).map { .change($0, isFile: false) })
         }
         let appeared = diff.files.filter { $0.status == .added }
         let grown = diff.files.filter { $0.status == .changed && $0.delta > 0 }
         let shrunk = diff.files.filter { $0.status == .changed && $0.delta < 0 }
         let vanished = diff.files.filter { $0.status == .removed }
-        for (title, list) in [(tr(en: "Files that appeared", fr: "Fichiers apparus"), appeared),
-                              (tr(en: "Files that grew", fr: "Fichiers qui ont grossi"), grown),
-                              (tr(en: "Files that shrank", fr: "Fichiers qui ont rétréci"), shrunk),
-                              (tr(en: "Files that vanished", fr: "Fichiers disparus"), vanished)] where !list.isEmpty {
+        for (title, list) in [(tr("Files that appeared"), appeared),
+                              (tr("Files that grew"), grown),
+                              (tr("Files that shrank"), shrunk),
+                              (tr("Files that vanished"), vanished)] where !list.isEmpty {
             rows.append(.header(title))
             rows.append(contentsOf: list.prefix(40).map { .change($0, isFile: true) })
         }
@@ -58,11 +58,11 @@ final class DiffSheet: NSObject, NSTableViewDataSource, NSTableViewDelegate {
         let content = NSView()
         panel.contentView = content
 
-        let title = NSTextField(labelWithString: tr(en: "What changed", fr: "Ce qui a bougé"))
+        let title = NSTextField(labelWithString: tr("What changed"))
         title.font = .systemFont(ofSize: 17, weight: .semibold)
 
         let formatter = L10n.dateFormatter(template: "d MMM HH:mm")
-        let span = NSTextField(labelWithString: tr(en: "from %@ to %@  (%@)", fr: "du %@ au %@  (%@)",
+        let span = NSTextField(labelWithString: tr("from %@ to %@  (%@)",
                                                    formatter.string(from: diff.before), formatter.string(from: diff.after),
                                                    humanDuration(diff.after.timeIntervalSince(diff.before))))
         span.font = .preferredFont(forTextStyle: .caption1)
@@ -85,17 +85,16 @@ final class DiffSheet: NSObject, NSTableViewDataSource, NSTableViewDelegate {
             stack.spacing = 0
             return stack
         }
-        figures.addArrangedSubview(figure(humanBytes(diff.totalBefore), tr(en: "before", fr: "avant")))
+        figures.addArrangedSubview(figure(humanBytes(diff.totalBefore), tr("before")))
         let arrow = NSTextField(labelWithString: "→")
         arrow.font = .systemFont(ofSize: 20, weight: .light)
         arrow.textColor = .tertiaryLabelColor
         figures.addArrangedSubview(arrow)
-        figures.addArrangedSubview(figure(humanBytes(diff.totalAfter), tr(en: "after", fr: "après")))
+        figures.addArrangedSubview(figure(humanBytes(diff.totalAfter), tr("after")))
         figures.addArrangedSubview(figure(signedBytes(diff.delta), diff.metric.title,
                                           tint: diff.delta > 0 ? Palette.statusCritical.nsColor
                                               : diff.delta < 0 ? Palette.statusGood.nsColor : .labelColor))
-        let counts = NSTextField(labelWithString: tr(en: "%@ files appeared · %@ vanished · threshold %@",
-                                                     fr: "%@ fichiers apparus · %@ disparus · seuil %@",
+        let counts = NSTextField(labelWithString: tr("%@ files appeared · %@ vanished · threshold %@",
                                                      L10n.count(diff.addedFileCount), L10n.count(diff.removedFileCount),
                                                      humanBytes(diff.threshold)))
         counts.font = .preferredFont(forTextStyle: .caption1)
@@ -122,17 +121,16 @@ final class DiffSheet: NSObject, NSTableViewDataSource, NSTableViewDelegate {
         scroll.hasVerticalScroller = true
         scroll.borderType = .noBorder
 
-        let empty = NSTextField(labelWithString: tr(en: "Nothing significant moved.", fr: "Rien de significatif n'a bougé."))
+        let empty = NSTextField(labelWithString: tr("Nothing significant moved."))
         empty.font = .systemFont(ofSize: 13)
         empty.textColor = .secondaryLabelColor
         empty.alignment = .center
         empty.isHidden = !rows.isEmpty
 
-        let hint = NSTextField(labelWithString: tr(en: "Double-click a row to find it on the map.",
-                                                   fr: "Double-clic sur une ligne pour la retrouver sur la carte."))
+        let hint = NSTextField(labelWithString: tr("Double-click a row to find it on the map."))
         hint.font = .preferredFont(forTextStyle: .caption1)
         hint.textColor = .tertiaryLabelColor
-        let close = NSButton(title: tr(en: "Close", fr: "Fermer"), target: self, action: #selector(dismiss))
+        let close = NSButton(title: tr("Close"), target: self, action: #selector(dismiss))
         close.bezelStyle = .rounded
         close.keyEquivalent = "\u{1b}"
         let buttons = NSStackView(views: [hint, NSView(), close])
@@ -212,12 +210,12 @@ final class DiffSheet: NSObject, NSTableViewDataSource, NSTableViewDelegate {
             case "note":
                 var note = ""
                 switch change.status {
-                case .added: note = tr(en: "new", fr: "neuf")
-                case .removed: note = tr(en: "gone", fr: "parti")
+                case .added: note = tr("new")
+                case .removed: note = tr("gone")
                 case .changed:
                     note = isFile ? "\(humanBytes(change.before)) → \(humanBytes(change.after))" : ""
                     if change.isSharingOnly(threshold: diff.threshold) {
-                        note = tr(en: "nothing written — cloned elsewhere", fr: "rien d'écrit — cloné ailleurs")
+                        note = tr("nothing written — cloned elsewhere")
                     }
                 }
                 let field = NSTextField(labelWithString: note)

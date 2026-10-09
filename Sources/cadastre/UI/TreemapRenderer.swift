@@ -163,7 +163,7 @@ final class TreemapRenderer {
             descriptor.colorAttachments[0].destinationAlphaBlendFactor = .oneMinusSourceAlpha
             pipeline = try device.makeRenderPipelineState(descriptor: descriptor)
         } catch {
-            FileHandle.standardError.write("cadastre: \(tr(en: "shader unavailable", fr: "shader indisponible")): \(error)\n".data(using: .utf8)!)
+            FileHandle.standardError.write("cadastre: \(tr("shader unavailable")): \(error)\n".data(using: .utf8)!)
             return nil
         }
     }

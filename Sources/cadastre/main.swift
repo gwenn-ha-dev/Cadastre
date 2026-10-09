@@ -2,7 +2,7 @@ import Foundation
 import CadastreC
 
 func usageText() -> String {
-    tr(en: """
+    tr("""
     cadastre — disk usage on macOS, without the usual lies
 
       cadastre [path] [options]
@@ -50,54 +50,6 @@ func usageText() -> String {
       attributed  fair share of shared blocks — the only additive measure
       exclusive   what deleting this one entry frees
       retained    what deleting the whole subtree frees
-    """, fr: """
-    cadastre — mesure d'occupation disque, sans les mensonges habituels de macOS
-
-      cadastre [chemin] [options]
-
-    Options
-      --depth N          profondeur d'arbre affichée (défaut 2)
-      --top N            nombre de gros fichiers listés (défaut 20)
-      --metric M         logical | allocated | attributed | exclusive | retained
-                         (défaut: attributed — la part équitable des blocs partagés)
-      --json FICHIER     exporte l'arbre complet en JSON
-      --threads N        parallélisme du parcours
-      --cross-mounts     descend dans les autres volumes (défaut: non)
-      --nice             parcourt en priorité d'E/S basse
-      --volumes          n'affiche que l'état des volumes, sans scanner
-      --keep-files       garde un enregistrement par fichier (implicite avec --save/--since)
-      --lang en|fr       langue de tous les messages (défaut : celle du système)
-      --no-color
-
-    Carte
-      --ui               ouvre le treemap (combinable avec --since pour colorer l'écart,
-                         --clean pour ouvrir sur le panneau « à récupérer », --find pour chercher)
-      --find TEXTE       met en avant, dans la fenêtre, tout nom contenant TEXTE
-      --open changes|reclaim   ouvre la fenêtre sur ce panneau
-      --disk             le disque entier : le volume Data, encadré par les autres
-                         volumes du conteneur et l'espace libre (dans la fenêtre : la même carte)
-      --snapshot FICHIER exporte la carte en PNG, sans ouvrir de fenêtre
-      --color-mode M     kind | depth | sharing | delta | reclaim   (défaut: kind)
-      --dark             rend la carte pour un fond sombre
-      --size LxH         dimensions de l'export (défaut 1280x800)
-
-    Récupérer de l'espace
-      --clean            liste ce qui est sûr à supprimer, avec le gain réel
-      --trash            met ces dossiers à la corbeille (jamais rm), après confirmation
-      --yes              n'attend pas la confirmation
-
-    Suivi dans le temps
-      --save FICHIER     enregistre le scan (« auto » : dans l'historique local)
-      --since FICHIER    compare le scan courant à un enregistrement (« last » : le plus récent)
-      --diff A B         compare deux enregistrements, sans rien scanner
-      --history          liste les enregistrements disponibles
-
-    Les cinq mesures
-      logical     somme des forks, non compressée — ce que montre le Finder
-      allocated   blocs sur disque, un clone compté dans chaque fichier
-      attributed  part équitable des blocs partagés — seule mesure additive
-      exclusive   ce que libère la suppression de cette entrée seule
-      retained    ce que libère la suppression de tout le sous-arbre
     """)
 }
 
@@ -143,6 +95,22 @@ func usageError(_ message: String) -> Never {
 // run from a terminal it stays a command-line tool unless asked for the map.
 // (`-psn_…` is what older launch paths hand a bundled process.)
 var arguments = Array(CommandLine.arguments.dropFirst()).filter { !$0.hasPrefix("-psn_") }
+// `-AppleLanguages "(en)"`, `-AppleLocale en_GB` and their kind are user
+// defaults handed over on the command line (NSArgumentDomain), read by
+// Foundation, not options of ours. Each is a capitalised key and its value.
+do {
+    var kept: [String] = []
+    var position = 0
+    while position < arguments.count {
+        if arguments[position].range(of: "^-[A-Z][A-Za-z]+$", options: .regularExpression) != nil {
+            position += 2
+        } else {
+            kept.append(arguments[position])
+            position += 1
+        }
+    }
+    arguments = kept
+}
 let launchedFromBundle = Bundle.main.bundlePath.hasSuffix(".app")
 if launchedFromBundle && arguments.isEmpty { arguments = ["--ui"] }
 
@@ -162,7 +130,7 @@ var index = 0
 func nextValue(_ flag: String) -> String {
     index += 1
     guard index < arguments.count else {
-        usageError(tr(en: "%@ expects a value", fr: "%@ attend une valeur", flag))
+        usageError(tr("%@ expects a value", flag))
     }
     return arguments[index]
 }
@@ -176,7 +144,7 @@ while index < arguments.count {
     case "--metric":
         let raw = nextValue(argument)
         guard let parsed = Metric(rawValue: raw) else {
-            usageError(tr(en: "unknown metric “%@”", fr: "métrique inconnue « %@ »", raw))
+            usageError(tr("unknown metric “%@”", raw))
         }
         metric = parsed
     case "--json": jsonPath = nextValue(argument)
@@ -203,7 +171,7 @@ while index < arguments.count {
     case "--color-mode":
         let raw = nextValue(argument)
         guard let parsed = ColorMode(rawValue: raw) else {
-            usageError(tr(en: "unknown colour mode “%@”", fr: "mode de couleur inconnu « %@ »", raw))
+            usageError(tr("unknown colour mode “%@”", raw))
         }
         colorMode = parsed
     case "--size":
@@ -214,7 +182,7 @@ while index < arguments.count {
     case "--no-color": Style.enabled = false
     default:
         if argument.hasPrefix("-") {
-            usageError(tr(en: "unknown option “%@”", fr: "option inconnue « %@ »", argument))
+            usageError(tr("unknown option “%@”", argument))
         }
         path = argument
     }
@@ -224,7 +192,7 @@ while index < arguments.count {
 if showHistory {
     let entries = SnapshotStore.history()
     if entries.isEmpty {
-        print(tr(en: "no records in %@", fr: "aucun enregistrement dans %@", SnapshotStore.directory))
+        print(tr("no records in %@", SnapshotStore.directory))
     } else {
         let formatter = L10n.dateFormatter(template: "d MMM yyyy HH:mm")
         for entry in entries {
@@ -280,7 +248,7 @@ let target = URL(fileURLWithPath: scanPath.expandingTildeInPath).standardizedFil
 
 var isDirectory: ObjCBool = false
 guard FileManager.default.fileExists(atPath: target, isDirectory: &isDirectory), isDirectory.boolValue else {
-    fail(tr(en: "%@ is not a folder", fr: "%@ n'est pas un dossier", target))
+    fail(tr("%@ is not a folder", target))
 }
 
 let volumeReport = VolumeReport.gather(for: target)
@@ -298,8 +266,7 @@ if let sincePath {
     var resolved = sincePath
     if sincePath == "last" {
         guard let latest = SnapshotStore.mostRecent(for: target) else {
-            fail(tr(en: "no record for %@ — run first: cadastre %@ --save auto",
-                    fr: "aucun enregistrement pour %@ — lancer d'abord : cadastre %@ --save auto", target, target))
+            fail(tr("no record for %@ — run first: cadastre %@ --save auto", target, target))
         }
         resolved = latest
     }
@@ -320,7 +287,7 @@ if interactive {
         let now = Date()
         guard now.timeIntervalSince(lastTick) > 0.1 else { return }
         lastTick = now
-        let line = tr(en: "\r  %@ folders, %@ queued…    ", fr: "\r  %@ dossiers, %@ en attente…    ",
+        let line = tr("\r  %@ folders, %@ queued…    ",
                       L10n.count(done), L10n.count(queued))
         FileHandle.standardError.write(line.data(using: .utf8)!)
     }
@@ -344,9 +311,9 @@ if let savePath {
         destination = savePath == "auto" ? try SnapshotStore.newPath(for: target, at: scannedAt) : savePath
         try ScanIndex.write(result, scannedAt: scannedAt, to: destination)
     } catch {
-        fail(tr(en: "could not save: %@", fr: "enregistrement impossible : %@", "\(error)"))
+        fail(tr("could not save: %@", "\(error)"))
     }
-    print(Style.dim(tr(en: "  scan saved to %@\n", fr: "  scan enregistré dans %@\n", destination)))
+    print(Style.dim(tr("  scan saved to %@\n", destination)))
 }
 
 if let snapshotPath {
@@ -357,7 +324,7 @@ if let snapshotPath {
         try TreemapSnapshot.write(model: model, colorMode: colorMode,
                                   mode: darkMap ? .dark : .light,
                                   size: mapSize, to: snapshotPath)
-        print(Style.dim(tr(en: "  map written to %@", fr: "  carte écrite dans %@", snapshotPath)))
+        print(Style.dim(tr("  map written to %@", snapshotPath)))
     } catch {
         fail("\(error)")
     }
@@ -371,8 +338,7 @@ if selfTestLayout {
         let check = LayoutSelfTest.run(model, bounds: Rect(x: 0, y: 0, width: 1440, height: 900))
         let status = check.passed ? Style.green("ok  ") : Style.red("FAIL")
         print("  \(status) \(metric.rawValue.padded(11)) "
-            + tr(en: "%d rectangles, %d frames checked, max error %.4f, median aspect %.2f",
-                 fr: "%d rectangles, %d cadres vérifiés, erreur max %.4f, rapport médian %.2f",
+            + tr("%d rectangles, %d frames checked, max error %.4f, median aspect %.2f",
                  check.rectangles, check.checked, check.worstProportionError, check.medianAspect))
         for failure in check.failures.prefix(3) { print("       \(failure)") }
         if !check.passed { failed = true }
@@ -414,9 +380,9 @@ print(renderer.topFilesSection(result))
 if let jsonPath {
     do {
         try exportJSON(result, to: jsonPath)
-        print(Style.dim(tr(en: "\n  tree written to %@", fr: "\n  arbre écrit dans %@", jsonPath)))
+        print(Style.dim(tr("\n  tree written to %@", jsonPath)))
     } catch {
-        fail(tr(en: "could not write JSON: %@", fr: "écriture JSON impossible : %@", "\(error)"))
+        fail(tr("could not write JSON: %@", "\(error)"))
     }
 }
 

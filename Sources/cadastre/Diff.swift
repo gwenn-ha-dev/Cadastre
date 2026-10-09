@@ -189,7 +189,7 @@ func humanDuration(_ seconds: TimeInterval) -> String {
     let hours = minutes / 60
     if hours < 48 { return "\(hours) h \(minutes % 60) min" }
     let days = hours / 24
-    return tr(en: "%d d %d h", fr: "%d j %d h", days, hours % 24)
+    return tr("%d d %d h", days, hours % 24)
 }
 
 func signedBytes(_ bytes: Int64) -> String {
@@ -198,21 +198,21 @@ func signedBytes(_ bytes: Int64) -> String {
 
 extension Renderer {
     func diffSection(_ diff: ScanDiff) -> String {
-        var out = Style.bold(tr(en: "CHANGE  ", fr: "ÉCART  ")) + Style.dim(diff.rootPath) + "\n"
+        var out = Style.bold(tr("CHANGE  ")) + Style.dim(diff.rootPath) + "\n"
         let formatter = L10n.dateFormatter(template: "d MMM HH:mm")
-        out += Style.dim(tr(en: "  from %@ to %@", fr: "  du %@ au %@",
+        out += Style.dim(tr("  from %@ to %@",
                             formatter.string(from: diff.before), formatter.string(from: diff.after)))
         out += Style.dim("  (\(humanDuration(diff.after.timeIntervalSince(diff.before))))\n\n")
 
         let colour = diff.delta > 0 ? Style.red : Style.green
         out += "  \(metric.rawValue.padded(12)) \(humanBytes(diff.totalBefore).padded(10)) → "
         out += "\(humanBytes(diff.totalAfter).padded(10))   " + Style.bold(colour(signedBytes(diff.delta))) + "\n"
-        out += Style.dim(tr(en: "  display threshold %@", fr: "  seuil d'affichage %@", humanBytes(diff.threshold)))
-        out += Style.dim(tr(en: "  ·  %d files appeared, %d vanished\n", fr: "  ·  %d fichiers apparus, %d disparus\n",
+        out += Style.dim(tr("  display threshold %@", humanBytes(diff.threshold)))
+        out += Style.dim(tr("  ·  %d files appeared, %d vanished\n",
                             diff.addedFileCount, diff.removedFileCount))
 
         if diff.directories.isEmpty && diff.files.isEmpty {
-            out += "\n  " + Style.green(tr(en: "nothing significant moved", fr: "rien de significatif n'a bougé")) + "\n"
+            out += "\n  " + Style.green(tr("nothing significant moved")) + "\n"
             return out
         }
 
@@ -220,18 +220,17 @@ extension Renderer {
         // conduit; the interesting ones moved bytes themselves.
         let movers = diff.directories.filter { abs($0.own) >= diff.threshold || $0.status != .changed }
         if !movers.isEmpty {
-            out += "\n" + Style.bold(tr(en: "  WHERE IT MOVED", fr: "  OÙ ÇA A BOUGÉ"))
-            out += Style.dim(tr(en: "  (change held by the folder itself)\n", fr: "  (variation propre au dossier)\n"))
+            out += "\n" + Style.bold(tr("  WHERE IT MOVED"))
+            out += Style.dim(tr("  (change held by the folder itself)\n"))
             for change in movers.prefix(topCount) {
-                let mark = change.status == .added ? Style.green(tr(en: "new  ", fr: "neuf "))
-                         : change.status == .removed ? Style.red(tr(en: "gone ", fr: "parti"))
+                let mark = change.status == .added ? Style.green(tr("new  "))
+                         : change.status == .removed ? Style.red(tr("gone "))
                          : "     "
                 let value = change.status == .changed ? change.own : change.delta
                 out += "  \(mark) " + (value > 0 ? Style.red : Style.green)(signedBytes(value).padded(11))
                 out += " \(change.path)"
                 if change.isSharingOnly(threshold: diff.threshold) {
-                    out += Style.dim(tr(en: "  nothing written — share of shared blocks redistributed",
-                                        fr: "  rien d'écrit — part de blocs partagés redistribuée"))
+                    out += Style.dim(tr("  nothing written — share of shared blocks redistributed"))
                 }
                 out += "\n"
             }
@@ -251,20 +250,20 @@ extension Renderer {
                 if change.status == .changed {
                     text += Style.dim("  (\(humanBytes(change.before)) → \(humanBytes(change.after)))")
                     if change.isSharingOnly(threshold: diff.threshold) {
-                        text += Style.dim(tr(en: "  cloned elsewhere, content unchanged", fr: "  cloné ailleurs, contenu inchangé"))
+                        text += Style.dim(tr("  cloned elsewhere, content unchanged"))
                     }
                 }
                 text += "\n"
             }
             if changes.count > limit {
-                text += Style.dim(tr(en: "  … and %d more\n", fr: "  … et %d autres\n", changes.count - limit))
+                text += Style.dim(tr("  … and %d more\n", changes.count - limit))
             }
             return text
         }
 
-        out += fileList(tr(en: "FILES THAT APPEARED", fr: "FICHIERS APPARUS"), appeared, limit: topCount)
-        out += fileList(tr(en: "FILES THAT GREW", fr: "FICHIERS QUI ONT GROSSI"), grown, limit: topCount / 2)
-        out += fileList(tr(en: "FILES THAT VANISHED", fr: "FICHIERS DISPARUS"), vanished, limit: topCount / 2)
+        out += fileList(tr("FILES THAT APPEARED"), appeared, limit: topCount)
+        out += fileList(tr("FILES THAT GREW"), grown, limit: topCount / 2)
+        out += fileList(tr("FILES THAT VANISHED"), vanished, limit: topCount / 2)
         return out
     }
 }

@@ -143,7 +143,7 @@ enum WholeDisk {
     /// Runs diskutil, so about a second: call it off the main thread.
     static func gather() -> Context {
         let report = VolumeReport.gather(for: path)
-        var name = tr(en: "This Mac", fr: "Ce Mac")
+        var name = tr("This Mac")
         var extras: [TreemapModel.Extra] = []
         if let container = report.containers.first(where: { $0.volumes.contains { $0.mountPoint == path } }) {
             for volume in container.volumes where volume.mountPoint != path && volume.used > 0 {
@@ -151,12 +151,12 @@ enum WholeDisk {
                 let role = volume.roles.first ?? ""
                 let detail: String
                 switch role {
-                case "System": detail = tr(en: "macOS itself, sealed and read-only", fr: "macOS lui-même, scellé et en lecture seule")
-                case "Preboot": detail = tr(en: "boot files and firmware, managed by macOS", fr: "fichiers de démarrage et firmware, gérés par macOS")
-                case "Recovery": detail = tr(en: "recovery system, managed by macOS", fr: "système de secours, géré par macOS")
-                case "VM": detail = tr(en: "swap and sleep image, sized by macOS", fr: "swap et image de veille, dimensionnés par macOS")
-                case "Update": detail = tr(en: "pending system updates", fr: "mises à jour système en attente")
-                default: detail = tr(en: "another volume of the same container", fr: "un autre volume du même conteneur")
+                case "System": detail = tr("macOS itself, sealed and read-only")
+                case "Preboot": detail = tr("boot files and firmware, managed by macOS")
+                case "Recovery": detail = tr("recovery system, managed by macOS")
+                case "VM": detail = tr("swap and sleep image, sized by macOS")
+                case "Update": detail = tr("pending system updates")
+                default: detail = tr("another volume of the same container")
                 }
                 extras.append(TreemapModel.Extra(name: volume.name, detail: detail, bytes: volume.used, kind: .volume))
             }
@@ -164,12 +164,11 @@ enum WholeDisk {
                 name = data.name.replacingOccurrences(of: " - Data", with: "").replacingOccurrences(of: " — Données", with: "")
             }
         }
-        var freeDetail = tr(en: "nothing occupies it", fr: "rien ne l'occupe")
+        var freeDetail = tr("nothing occupies it")
         if report.purgeable > 0 {
-            freeDetail += tr(en: " · plus %@ purgeable that macOS will give back under pressure",
-                             fr: " · plus %@ purgeable que macOS rendra sous pression", humanBytes(report.purgeable))
+            freeDetail += tr(" · plus %@ purgeable that macOS will give back under pressure", humanBytes(report.purgeable))
         }
-        extras.append(TreemapModel.Extra(name: tr(en: "free", fr: "libre"), detail: freeDetail,
+        extras.append(TreemapModel.Extra(name: tr("free"), detail: freeDetail,
                                          bytes: report.availableRaw, kind: .free))
         return Context(displayName: name, extras: extras, hasFullDiskAccess: report.hasFullDiskAccess)
     }
@@ -206,8 +205,8 @@ func chooseFolder(startingAt current: String?) -> String? {
     panel.canChooseFiles = false
     panel.canChooseDirectories = true
     panel.allowsMultipleSelection = false
-    panel.prompt = tr(en: "Measure", fr: "Analyser")
-    panel.message = tr(en: "Choose the folder to measure", fr: "Choisir le dossier à analyser")
+    panel.prompt = tr("Measure")
+    panel.message = tr("Choose the folder to measure")
     panel.directoryURL = URL(fileURLWithPath: current ?? NSHomeDirectory())
     return panel.runModal() == .OK ? panel.url?.path : nil
 }

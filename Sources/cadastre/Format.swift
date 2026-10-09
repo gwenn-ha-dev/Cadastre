@@ -27,12 +27,9 @@ func humanBytes(_ bytes: Int64) -> String {
         value /= 1000
         unit += 1
     }
-    var number: String
-    if unit == 0 { number = "\(Int(value))" }
-    else if value >= 100 { number = String(format: "%.0f", value) }
-    else if value >= 10 { number = String(format: "%.1f", value) }
-    else { number = String(format: "%.2f", value) }
-    if L10n.decimalSeparator != "." { number = number.replacingOccurrences(of: ".", with: L10n.decimalSeparator) }
+    let digits = unit == 0 || value >= 100 ? 0 : value >= 10 ? 1 : 2
+    let number = value.formatted(.number.precision(.fractionLength(digits)).grouping(.never)
+                                    .locale(L10n.language.locale))
     let text = number + "\u{00A0}" + units[unit]
     return negative ? "-" + text : text
 }
@@ -55,63 +52,60 @@ struct Renderer {
         if compact {
             var notes: [String] = []
             if report.purgeable > 0 {
-                notes.append(tr(en: "%@ purgeable", fr: "%@ purgeable", humanBytes(report.purgeable)))
+                notes.append(tr("%@ purgeable", humanBytes(report.purgeable)))
             }
             if !report.snapshots.isEmpty {
-                notes.append(tr(en: "%d local snapshot(s)", fr: "%d snapshot(s) local(aux)", report.snapshots.count))
+                notes.append(tr("%d local snapshot(s)", report.snapshots.count))
             }
             if !report.hasFullDiskAccess {
-                notes.append(Style.red(tr(en: "no Full Disk Access", fr: "sans accès disque complet")))
+                notes.append(Style.red(tr("no Full Disk Access")))
             }
             guard !notes.isEmpty else { return "" }
             return Style.dim("  \(report.mountPoint) · " + notes.joined(separator: " · ")) + "\n\n"
         }
-        out += Style.bold(tr(en: "VOLUME\n", fr: "VOLUME\n"))
-        out += "  " + tr(en: "mount point", fr: "point de montage").leftPadded(21) + report.mountPoint + "\n"
-        out += "  " + tr(en: "capacity", fr: "capacité").leftPadded(21) + humanBytes(report.totalCapacity) + "\n"
-        out += "  " + tr(en: "free (statfs)", fr: "libre (statfs)").leftPadded(21) + humanBytes(report.availableRaw) + "\n"
+        out += Style.bold(tr("VOLUME\n"))
+        out += "  " + tr("mount point").leftPadded(21) + report.mountPoint + "\n"
+        out += "  " + tr("capacity").leftPadded(21) + humanBytes(report.totalCapacity) + "\n"
+        out += "  " + tr("free (statfs)").leftPadded(21) + humanBytes(report.availableRaw) + "\n"
         if report.availableForImportant > 0 {
-            out += "  " + tr(en: "free as advertised", fr: "libre annoncé").leftPadded(21)
+            out += "  " + tr("free as advertised").leftPadded(21)
             out += humanBytes(report.availableForImportant)
             if report.purgeable > 0 {
-                out += Style.yellow(tr(en: "   of which %@ purgeable", fr: "   dont %@ purgeable", humanBytes(report.purgeable)))
-                out += Style.dim(tr(en: " (macOS gives it back under pressure, not when you delete)",
-                                    fr: " (macOS le rendra sous pression, pas en supprimant)"))
+                out += Style.yellow(tr("   of which %@ purgeable", humanBytes(report.purgeable)))
+                out += Style.dim(tr(" (macOS gives it back under pressure, not when you delete)"))
             }
             out += "\n"
         }
 
-        let snapshotsLabel = "  " + tr(en: "local snapshots", fr: "snapshots locaux").leftPadded(21)
+        let snapshotsLabel = "  " + tr("local snapshots").leftPadded(21)
         if report.snapshots.isEmpty {
-            out += snapshotsLabel + Style.green(tr(en: "none", fr: "aucun")) + "\n"
+            out += snapshotsLabel + Style.green(tr("none")) + "\n"
         } else {
             out += snapshotsLabel + Style.yellow("\(report.snapshots.count)") + "\n"
             for snapshot in report.snapshots.prefix(5) {
                 out += Style.dim("      \(snapshot)\n")
             }
-            out += Style.dim(tr(en: "      → while they live, deleting files frees nothing\n",
-                                fr: "      → tant qu'ils vivent, supprimer des fichiers ne libère rien\n"))
+            out += Style.dim(tr("      → while they live, deleting files frees nothing\n"))
         }
 
-        let accessLabel = "  " + tr(en: "Full Disk Access", fr: "accès disque complet").leftPadded(21)
+        let accessLabel = "  " + tr("Full Disk Access").leftPadded(21)
         if !report.hasFullDiskAccess {
-            out += accessLabel + Style.red(tr(en: "NO", fr: "NON"))
-            out += Style.dim(tr(en: "  Mail, Messages, Safari and iOS backups will read as empty\n",
-                                fr: "  Mail, Messages, Safari, sauvegardes iOS seront lus comme vides\n"))
+            out += accessLabel + Style.red(tr("NO"))
+            out += Style.dim(tr("  Mail, Messages, Safari and iOS backups will read as empty\n"))
         } else {
-            out += accessLabel + Style.green(tr(en: "yes", fr: "oui")) + "\n"
+            out += accessLabel + Style.green(tr("yes")) + "\n"
         }
 
         for container in report.containers where container.volumes.count > 1 {
-            out += "\n" + Style.bold(tr(en: "APFS CONTAINER %@", fr: "CONTENEUR APFS %@", container.reference))
-            out += Style.dim(tr(en: "  (space shared by all its volumes)\n", fr: "  (espace partagé entre tous ses volumes)\n"))
+            out += "\n" + Style.bold(tr("APFS CONTAINER %@", container.reference))
+            out += Style.dim(tr("  (space shared by all its volumes)\n"))
             let scanned = report.mountPoint
             for volume in container.volumes.sorted(by: { $0.used > $1.used }) {
                 let mounted = volume.mountPoint
                 let isScanned = mounted == scanned
                 let marker = isScanned ? Style.cyan("→") : (mounted == nil ? Style.yellow("×") : " ")
                 let role = volume.roles.first.map { " [\($0)]" } ?? ""
-                let location = mounted ?? tr(en: "not mounted", fr: "non monté")
+                let location = mounted ?? tr("not mounted")
                 out += "  \(marker) \(humanBytes(volume.used).padded(10))  \(volume.name)\(role)"
                 out += Style.dim("  \(location)\n")
             }
@@ -121,8 +115,7 @@ struct Renderer {
             if invisible > 0 {
                 out += Style.dim("    ")
                 out += Style.yellow("\(humanBytes(invisible))")
-                out += Style.dim(tr(en: " used outside the scanned volume — no treemap sees them\n",
-                                    fr: " occupés hors du volume scanné — aucun treemap ne les voit\n"))
+                out += Style.dim(tr(" used outside the scanned volume — no treemap sees them\n"))
             }
         }
         return out
@@ -133,10 +126,9 @@ struct Renderer {
         let root = result.tree.total[Int(result.root)]
         var out = ""
 
-        out += "\n" + Style.bold(tr(en: "MEASURE  ", fr: "MESURE  ")) + Style.dim(result.tree.name[Int(result.root)]) + "\n"
+        out += "\n" + Style.bold(tr("MEASURE  ")) + Style.dim(result.tree.name[Int(result.root)]) + "\n"
         let rate = stats.elapsed > 0 ? Double(stats.files + stats.directories) / stats.elapsed : 0
-        out += Style.dim(tr(en: "  %@ folders, %@ files in %.2f s  (%.0f entries/s)\n",
-                            fr: "  %@ dossiers, %@ fichiers en %.2f s  (%.0f entrées/s)\n",
+        out += Style.dim(tr("  %@ folders, %@ files in %.2f s  (%.0f entries/s)\n",
                             L10n.count(stats.directories), L10n.count(stats.files), stats.elapsed, rate))
 
         out += "\n"
@@ -145,66 +137,60 @@ struct Renderer {
             let v = strong ? Style.bold(value.padded(11)) : value.padded(11)
             return "  " + l + v + "  " + Style.dim(note) + "\n"
         }
-        out += line(tr(en: "logical", fr: "logique"), humanBytes(root.logical),
-                    tr(en: "what the Finder adds up", fr: "ce que le Finder additionne"))
-        out += line(tr(en: "allocated", fr: "alloué"), humanBytes(root.allocated),
-                    tr(en: "blocks on disk, clones counted once per file", fr: "blocs sur disque, clones comptés une fois par fichier"))
-        out += line(tr(en: "real", fr: "réel"), humanBytes(root.attributed),
-                    tr(en: "fair share of shared blocks — the only additive one", fr: "part équitable des blocs partagés — le seul additif"),
+        out += line(tr("logical"), humanBytes(root.logical),
+                    tr("what the Finder adds up"))
+        out += line(tr("allocated"), humanBytes(root.allocated),
+                    tr("blocks on disk, clones counted once per file"))
+        out += line(tr("real"), humanBytes(root.attributed),
+                    tr("fair share of shared blocks — the only additive one"),
                     strong: true)
-        out += line(tr(en: "reclaimable", fr: "récupérable"), humanBytes(root.retained),
-                    tr(en: "freed if the whole tree is deleted", fr: "libéré si on supprime tout l'arbre"))
+        out += line(tr("reclaimable"), humanBytes(root.retained),
+                    tr("freed if the whole tree is deleted"))
 
         let inflation = root.allocated - root.attributed
         if inflation > 0 {
             let percent = Double(inflation) / Double(max(root.attributed, 1)) * 100
             out += "\n  " + Style.yellow("→ ") + "\(humanBytes(inflation)) "
-            out += tr(en: "(%.1f %%) of clones and hard links that `du` would count twice\n",
-                      fr: "(%.1f %%) de clones et liens durs que `du` compterait en double\n", percent)
+            out += tr("(%.1f %%) of clones and hard links that `du` would count twice\n", percent)
         }
         if result.settlement.reachesOutside > 0 {
             out += "  " + Style.yellow("→ ") + "\(humanBytes(result.settlement.reachesOutside)) "
-            out += tr(en: "shared with files outside the scope ", fr: "partagés avec des fichiers hors du périmètre ")
-            out += Style.dim(tr(en: "(%d families) — not reclaimable from here\n",
-                                fr: "(%d familles) — non récupérables ici\n", result.settlement.straddlingFamilies))
+            out += tr("shared with files outside the scope ")
+            out += Style.dim(tr("(%d families) — not reclaimable from here\n", result.settlement.straddlingFamilies))
         }
         if stats.datalessFiles > 0 {
             out += "  " + Style.cyan("→ ")
-            out += tr(en: "%d evicted iCloud files, %@ logical ", fr: "%d fichiers iCloud évincés, %@ logiques ",
+            out += tr("%d evicted iCloud files, %@ logical ",
                       stats.datalessFiles, humanBytes(stats.datalessLogicalBytes))
-            out += Style.dim(tr(en: "absent from disk (not downloaded by the scan)\n",
-                                fr: "absents du disque (non rapatriés par le scan)\n"))
+            out += Style.dim(tr("absent from disk (not downloaded by the scan)\n"))
         }
         if stats.compressedFiles > 0 {
-            out += "  " + Style.dim(tr(en: "→ %d compressed files, %@ saved\n", fr: "→ %d fichiers compressés, %@ économisés\n",
+            out += "  " + Style.dim(tr("→ %d compressed files, %@ saved\n",
                                        stats.compressedFiles, humanBytes(stats.compressedSaved)))
         }
         if stats.sparseSaved > 0 {
-            out += "  " + Style.dim(tr(en: "→ %@ of holes in sparse files (disk images, VMs)\n",
-                                       fr: "→ %@ de trous dans des fichiers creux (images disque, VM)\n",
+            out += "  " + Style.dim(tr("→ %@ of holes in sparse files (disk images, VMs)\n",
                                        humanBytes(stats.sparseSaved)))
         }
         if stats.deniedDirectories > 0 {
-            out += "  " + Style.red("→ ") + tr(en: "%d folders refused ", fr: "%d dossiers refusés ", stats.deniedDirectories)
-            out += Style.dim(tr(en: "— the total above is a floor, not a measure\n",
-                                fr: "— le total ci-dessus est un plancher, pas une mesure\n"))
+            out += "  " + Style.red("→ ") + tr("%d folders refused ", stats.deniedDirectories)
+            out += Style.dim(tr("— the total above is a floor, not a measure\n"))
             for path in result.deniedPaths.prefix(5) {
                 out += Style.dim("      \(path)\n")
             }
         }
         if stats.crossedMounts > 0 {
-            out += Style.dim(tr(en: "  → %d mount points / firmlinks not followed\n",
-                                fr: "  → %d points de montage / firmlinks non suivis\n", stats.crossedMounts))
+            out += Style.dim(tr("  → %d mount points / firmlinks not followed\n", stats.crossedMounts))
         }
         if result.stats.cancelled {
-            out += "  " + Style.yellow("→ ") + tr(en: "scan interrupted — partial figures\n", fr: "scan interrompu — chiffres partiels\n")
+            out += "  " + Style.yellow("→ ") + tr("scan interrupted — partial figures\n")
         }
         return out
     }
 
     func treeSection(_ result: ScanResult) -> String {
-        var out = "\n" + Style.bold(tr(en: "TREE  ", fr: "ARBRE  "))
-        out += Style.dim(tr(en: "sorted by “%@”\n", fr: "trié par « %@ »\n", metric.rawValue))
+        var out = "\n" + Style.bold(tr("TREE  "))
+        out += Style.dim(tr("sorted by “%@”\n", metric.rawValue))
         let tree = result.tree
         let rootValue = max(metric.value(tree.total[Int(result.root)]), 1)
 
@@ -224,11 +210,11 @@ struct Renderer {
                 line += Style.dim(bar(fraction, width: 10)) + " "
                 line += humanBytes(value).padded(10) + " "
                 line += tree.name[Int(child)]
-                if tree.skipped[Int(child)] == .denied { line += " " + Style.red(tr(en: "(refused)", fr: "(refusé)")) }
-                if tree.skipped[Int(child)] == .otherVolume { line += " " + Style.dim(tr(en: "(other volume)", fr: "(autre volume)")) }
-                if tree.skipped[Int(child)] == .ioError { line += " " + Style.red(tr(en: "(read error)", fr: "(erreur de lecture)")) }
+                if tree.skipped[Int(child)] == .denied { line += " " + Style.red(tr("(refused)")) }
+                if tree.skipped[Int(child)] == .otherVolume { line += " " + Style.dim(tr("(other volume)")) }
+                if tree.skipped[Int(child)] == .ioError { line += " " + Style.red(tr("(read error)")) }
                 if shared > value / 4 && shared > 100 << 20 {
-                    line += " " + Style.yellow(tr(en: "· %@ shared", fr: "· %@ partagés", humanBytes(shared)))
+                    line += " " + Style.yellow(tr("· %@ shared", humanBytes(shared)))
                 }
                 out += line + "\n"
                 walk(child, level: level + 1, prefix: prefix + (last ? "   " : "│  "))
@@ -240,17 +226,17 @@ struct Renderer {
 
     func topFilesSection(_ result: ScanResult) -> String {
         guard !result.topFiles.isEmpty else { return "" }
-        var out = "\n" + Style.bold(tr(en: "LARGEST FILES\n", fr: "PLUS GROS FICHIERS\n"))
+        var out = "\n" + Style.bold(tr("LARGEST FILES\n"))
         for file in result.topFiles.prefix(topCount) {
             var line = "  " + humanBytes(file.sizes.attributed).padded(10) + " "
             line += file.path
             var notes: [String] = []
-            if file.cloneRefcount > 1 { notes.append(tr(en: "cloned ×%d", fr: "cloné ×%d", file.cloneRefcount)) }
-            if file.nlink > 1 { notes.append(tr(en: "%d hard links", fr: "%d liens durs", file.nlink)) }
+            if file.cloneRefcount > 1 { notes.append(tr("cloned ×%d", file.cloneRefcount)) }
+            if file.nlink > 1 { notes.append(tr("%d hard links", file.nlink)) }
             if file.dataless { notes.append("iCloud") }
-            if file.compressed { notes.append(tr(en: "compressed", fr: "compressé")) }
+            if file.compressed { notes.append(tr("compressed")) }
             if file.sizes.logical > file.sizes.allocated * 2 {
-                notes.append(tr(en: "sparse, %@ logical", fr: "creux, %@ logiques", humanBytes(file.sizes.logical)))
+                notes.append(tr("sparse, %@ logical", humanBytes(file.sizes.logical)))
             }
             if !notes.isEmpty { line += " " + Style.yellow("(" + notes.joined(separator: ", ") + ")") }
             out += line + "\n"

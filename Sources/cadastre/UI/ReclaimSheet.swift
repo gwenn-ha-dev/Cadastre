@@ -83,13 +83,10 @@ final class ReclaimSheet: NSObject, NSTableViewDataSource, NSTableViewDelegate {
         let content = NSView()
         panel.contentView = content
 
-        let title = NSTextField(labelWithString: tr(en: "Reclaim space", fr: "Récupérer de l'espace"))
+        let title = NSTextField(labelWithString: tr("Reclaim space"))
         title.font = .systemFont(ofSize: 17, weight: .semibold)
-        let blurb = NSTextField(wrappingLabelWithString: tr(
-            en: "Every entry was kept on evidence — a manifest beside it, a declared cache. "
-              + "Sizes are what would actually be freed, clones deducted. Nothing is erased: everything goes to the Trash.",
-            fr: "Chaque entrée a été retenue sur preuve — un manifeste à côté, un cache déclaré. "
-              + "Les tailles indiquées sont ce qui serait réellement libéré, clones déduits. Rien n'est effacé : tout part à la corbeille."))
+        let blurb = NSTextField(wrappingLabelWithString: tr("Every entry was kept on evidence — a manifest beside it, a declared cache. "
+              + "Sizes are what would actually be freed, clones deducted. Nothing is erased: everything goes to the Trash."))
         blurb.font = .preferredFont(forTextStyle: .caption1)
         blurb.textColor = .secondaryLabelColor
 
@@ -103,9 +100,9 @@ final class ReclaimSheet: NSObject, NSTableViewDataSource, NSTableViewDelegate {
         table.doubleAction = #selector(revealRow)
         table.target = self
         for (identifier, title, width) in [("mark", "", 24),
-                                           ("path", tr(en: "Folder", fr: "Dossier"), 360),
-                                           ("gain", tr(en: "Reclaimable", fr: "Récupérable"), 96),
-                                           ("rule", tr(en: "Comes back by", fr: "Revient par"), 200)] {
+                                           ("path", tr("Folder"), 360),
+                                           ("gain", tr("Reclaimable"), 96),
+                                           ("rule", tr("Comes back by"), 200)] {
             let column = NSTableColumn(identifier: .init(identifier))
             column.title = title
             column.width = CGFloat(width)
@@ -125,12 +122,12 @@ final class ReclaimSheet: NSObject, NSTableViewDataSource, NSTableViewDelegate {
         figures.alignment = .leading
         figures.spacing = 1
 
-        action.title = tr(en: "Move to Trash", fr: "Mettre à la corbeille")
+        action.title = tr("Move to Trash")
         action.bezelStyle = .rounded
         action.keyEquivalent = "\r"
         action.target = self
         action.action = #selector(performTrash)
-        let cancel = NSButton(title: tr(en: "Close", fr: "Fermer"), target: self, action: #selector(close))
+        let cancel = NSButton(title: tr("Close"), target: self, action: #selector(close))
         cancel.bezelStyle = .rounded
         cancel.keyEquivalent = "\u{1b}"
 
@@ -182,9 +179,9 @@ final class ReclaimSheet: NSObject, NSTableViewDataSource, NSTableViewDelegate {
         let combined = Reclaim.combinedFreed(picked, in: session.result)
         let separately = picked.reduce(0) { $0 + $1.sizes.retained }
         total.stringValue = humanBytes(combined)
-        var text = tr(en: "%d selected", fr: "%d sélectionnés", picked.count)
+        var text = tr("%d selected", picked.count)
         if combined > separately + (1 << 20) {
-            text += tr(en: " · %@ of it only comes back together", fr: " · dont %@ qui ne viennent qu'ensemble",
+            text += tr(" · %@ of it only comes back together",
                        humanBytes(combined - separately))
         }
         summary.stringValue = text
@@ -196,12 +193,11 @@ final class ReclaimSheet: NSObject, NSTableViewDataSource, NSTableViewDelegate {
         guard !picked.isEmpty else { return }
 
         let alert = NSAlert()
-        alert.messageText = tr(en: "Move %d folders to the Trash?", fr: "Mettre %d dossiers à la corbeille ?", picked.count)
-        alert.informativeText = tr(en: "Nothing is erased: everything goes to the Trash, and can come back from it.",
-                                   fr: "Rien n'est effacé : tout part à la corbeille, et peut en revenir.")
+        alert.messageText = tr("Move %d folders to the Trash?", picked.count)
+        alert.informativeText = tr("Nothing is erased: everything goes to the Trash, and can come back from it.")
         alert.alertStyle = .warning
-        alert.addButton(withTitle: tr(en: "Move to Trash", fr: "Mettre à la corbeille"))
-        alert.addButton(withTitle: tr(en: "Cancel", fr: "Annuler"))
+        alert.addButton(withTitle: tr("Move to Trash"))
+        alert.addButton(withTitle: tr("Cancel"))
         alert.beginSheetModal(for: panel) { [weak self] response in
             guard let self, response == .alertFirstButtonReturn else { return }
             var moved: [(trashed: URL, original: URL)] = []
@@ -235,8 +231,7 @@ final class ReclaimSheet: NSObject, NSTableViewDataSource, NSTableViewDelegate {
             box.tag = row
             box.state = chosen.contains(row) ? .on : .off
             box.isEnabled = !isReview
-            box.toolTip = isReview ? tr(en: "Never deleted by Cadastre — your call.",
-                                        fr: "Jamais supprimé par Cadastre — à votre appréciation.") : nil
+            box.toolTip = isReview ? tr("Never deleted by Cadastre — your call.") : nil
             return box
         case "gain":
             let field = NSTextField(labelWithString: humanBytes(candidate.sizes.retained))
@@ -263,7 +258,7 @@ final class ReclaimSheet: NSObject, NSTableViewDataSource, NSTableViewDelegate {
             head.spacing = 6
             var detail = (candidate.path as NSString).deletingLastPathComponent + " · " + candidate.rule.label
             if let age = candidate.age {
-                detail += " · " + tr(en: "modified %@ ago", fr: "modifié il y a %@", humanDuration(age))
+                detail += " · " + tr("modified %@ ago", humanDuration(age))
             }
             let parent = NSTextField(labelWithString: detail)
             parent.font = .systemFont(ofSize: 9.5)

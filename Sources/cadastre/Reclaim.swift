@@ -25,30 +25,27 @@ enum Reclaim {
 
         var label: String {
             switch self {
-            case .regenerable: return tr(en: "REGENERABLE", fr: "REGÉNÉRABLE")
-            case .cache: return tr(en: "CACHE", fr: "CACHE")
-            case .review: return tr(en: "YOUR CALL", fr: "À VOTRE APPRÉCIATION")
+            case .regenerable: return tr("REGENERABLE")
+            case .cache: return tr("CACHE")
+            case .review: return tr("YOUR CALL")
             }
         }
         /// Lower-case form for the inspector, the legend and the sheet.
         var title: String {
             switch self {
-            case .regenerable: return tr(en: "regenerable", fr: "régénérable")
-            case .cache: return tr(en: "cache", fr: "cache")
-            case .review: return tr(en: "your call", fr: "à votre appréciation")
+            case .regenerable: return tr("regenerable")
+            case .cache: return tr("cache")
+            case .review: return tr("your call")
             }
         }
         var blurb: String {
             switch self {
             case .regenerable:
-                return tr(en: "rebuilt by a tool from files that are still there",
-                          fr: "reconstruit par un outil, à partir de fichiers toujours présents")
+                return tr("rebuilt by a tool from files that are still there")
             case .cache:
-                return tr(en: "refills itself — you lose time, not data",
-                          fr: "se reremplit tout seul — on perd du temps, pas des données")
+                return tr("refills itself — you lose time, not data")
             case .review:
-                return tr(en: "large and often unwanted, but irreplaceable — never deleted automatically",
-                          fr: "volumineux et souvent inutile, mais irremplaçable — jamais supprimé automatiquement")
+                return tr("large and often unwanted, but irreplaceable — never deleted automatically")
             }
         }
     }
@@ -91,129 +88,128 @@ enum Reclaim {
 
     static var catalogue: [Rule] { [
         // --- Build output: evidence is the file the tool rebuilds it from ---
-        Rule(id: "node_modules", label: tr(en: "npm dependencies", fr: "dépendances npm"), confidence: .regenerable,
+        Rule(id: "node_modules", label: tr("npm dependencies"), confidence: .regenerable,
              match: .named("node_modules"),
              siblings: ["package.json"],
              recovery: "npm install / pnpm install / yarn"),
-        Rule(id: "cargo-target", label: tr(en: "Rust build output", fr: "cible de compilation Rust"), confidence: .regenerable,
+        Rule(id: "cargo-target", label: tr("Rust build output"), confidence: .regenerable,
              match: .named("target"),
              siblings: ["Cargo.toml"],
              recovery: "cargo build"),
-        Rule(id: "swiftpm-build", label: tr(en: "SwiftPM build output", fr: "cible de compilation SwiftPM"), confidence: .regenerable,
+        Rule(id: "swiftpm-build", label: tr("SwiftPM build output"), confidence: .regenerable,
              match: .named(".build"),
              siblings: ["Package.swift"],
              recovery: "swift build"),
-        Rule(id: "cmake-build", label: tr(en: "CMake build output", fr: "cible de compilation CMake"), confidence: .regenerable,
+        Rule(id: "cmake-build", label: tr("CMake build output"), confidence: .regenerable,
              match: .named("build"),
              contents: ["CMakeCache.txt"],
              recovery: "cmake --build"),
-        Rule(id: "cocoapods", label: tr(en: "CocoaPods Pods", fr: "Pods CocoaPods"), confidence: .regenerable,
+        Rule(id: "cocoapods", label: tr("CocoaPods Pods"), confidence: .regenerable,
              match: .named("Pods"),
              siblings: ["Podfile"],
              recovery: "pod install"),
-        Rule(id: "next", label: tr(en: "Next.js output", fr: "sortie Next.js"), confidence: .regenerable,
+        Rule(id: "next", label: tr("Next.js output"), confidence: .regenerable,
              match: .named(".next"), siblings: ["package.json"], recovery: "next build"),
-        Rule(id: "nuxt", label: tr(en: "Nuxt output", fr: "sortie Nuxt"), confidence: .regenerable,
+        Rule(id: "nuxt", label: tr("Nuxt output"), confidence: .regenerable,
              match: .named(".nuxt"), siblings: ["package.json"], recovery: "nuxt build"),
-        Rule(id: "turbo", label: tr(en: "Turborepo cache", fr: "cache Turborepo"), confidence: .regenerable,
+        Rule(id: "turbo", label: tr("Turborepo cache"), confidence: .regenerable,
              match: .named(".turbo"), siblings: ["package.json"], recovery: "turbo run"),
-        Rule(id: "parcel", label: tr(en: "Parcel cache", fr: "cache Parcel"), confidence: .regenerable,
+        Rule(id: "parcel", label: tr("Parcel cache"), confidence: .regenerable,
              match: .named(".parcel-cache"), siblings: ["package.json"], recovery: "parcel build"),
-        Rule(id: "gradle-project", label: tr(en: "project Gradle cache", fr: "cache Gradle du projet"), confidence: .regenerable,
+        Rule(id: "gradle-project", label: tr("project Gradle cache"), confidence: .regenerable,
              match: .named(".gradle"),
              siblings: ["build.gradle", "build.gradle.kts", "settings.gradle", "settings.gradle.kts"],
              recovery: "gradle build"),
-        Rule(id: "venv", label: tr(en: "Python virtual environment", fr: "environnement virtuel Python"), confidence: .regenerable,
+        Rule(id: "venv", label: tr("Python virtual environment"), confidence: .regenerable,
              match: .named(".venv"),
              siblings: ["pyproject.toml", "requirements.txt", "setup.py", "Pipfile", "uv.lock", "poetry.lock"],
              recovery: "python -m venv / uv sync / poetry install"),
-        Rule(id: "venv-plain", label: tr(en: "Python virtual environment", fr: "environnement virtuel Python"), confidence: .regenerable,
+        Rule(id: "venv-plain", label: tr("Python virtual environment"), confidence: .regenerable,
              match: .named("venv"),
              siblings: ["pyproject.toml", "requirements.txt", "setup.py", "Pipfile"],
              contents: ["pyvenv.cfg"],
              recovery: "python -m venv + pip install"),
-        Rule(id: "carthage", label: tr(en: "Carthage build", fr: "compilation Carthage"), confidence: .regenerable,
+        Rule(id: "carthage", label: tr("Carthage build"), confidence: .regenerable,
              match: .named("Carthage"), siblings: ["Cartfile"], recovery: "carthage bootstrap"),
-        Rule(id: "dart-tool", label: tr(en: "Dart/Flutter tool cache", fr: "cache d'outils Dart/Flutter"), confidence: .regenerable,
+        Rule(id: "dart-tool", label: tr("Dart/Flutter tool cache"), confidence: .regenerable,
              match: .named(".dart_tool"), siblings: ["pubspec.yaml"], recovery: "flutter pub get"),
-        Rule(id: "vendor", label: tr(en: "vendored dependencies", fr: "dépendances vendorisées"), confidence: .regenerable,
+        Rule(id: "vendor", label: tr("vendored dependencies"), confidence: .regenerable,
              match: .named("vendor"), siblings: ["composer.json", "go.mod"],
              recovery: "composer install / go mod vendor"),
-        Rule(id: "elixir-build", label: tr(en: "Elixir build output", fr: "cible de compilation Elixir"), confidence: .regenerable,
+        Rule(id: "elixir-build", label: tr("Elixir build output"), confidence: .regenerable,
              match: .named("_build"), siblings: ["mix.exs"], recovery: "mix compile"),
-        Rule(id: "zig-cache", label: tr(en: "Zig cache", fr: "cache Zig"), confidence: .regenerable,
+        Rule(id: "zig-cache", label: tr("Zig cache"), confidence: .regenerable,
              match: .named(".zig-cache"), siblings: ["build.zig"], recovery: "zig build"),
 
         // --- Tool droppings that regenerate without being asked ---
-        Rule(id: "pycache", label: tr(en: "Python bytecode", fr: "bytecode Python"), confidence: .regenerable,
-             match: .named("__pycache__"), recovery: tr(en: "recreated on import", fr: "recréé à l'import")),
-        Rule(id: "pytest", label: tr(en: "pytest cache", fr: "cache pytest"), confidence: .regenerable,
-             match: .named(".pytest_cache"), recovery: tr(en: "recreated on the next run", fr: "recréé au prochain run")),
-        Rule(id: "mypy", label: tr(en: "mypy cache", fr: "cache mypy"), confidence: .regenerable,
-             match: .named(".mypy_cache"), recovery: tr(en: "recreated on the next run", fr: "recréé au prochain run")),
-        Rule(id: "ruff", label: tr(en: "ruff cache", fr: "cache ruff"), confidence: .regenerable,
-             match: .named(".ruff_cache"), recovery: tr(en: "recreated on the next run", fr: "recréé au prochain run")),
+        Rule(id: "pycache", label: tr("Python bytecode"), confidence: .regenerable,
+             match: .named("__pycache__"), recovery: tr("recreated on import")),
+        Rule(id: "pytest", label: tr("pytest cache"), confidence: .regenerable,
+             match: .named(".pytest_cache"), recovery: tr("recreated on the next run")),
+        Rule(id: "mypy", label: tr("mypy cache"), confidence: .regenerable,
+             match: .named(".mypy_cache"), recovery: tr("recreated on the next run")),
+        Rule(id: "ruff", label: tr("ruff cache"), confidence: .regenerable,
+             match: .named(".ruff_cache"), recovery: tr("recreated on the next run")),
 
-        Rule(id: "derived-data", label: tr(en: "Xcode DerivedData", fr: "DerivedData Xcode"), confidence: .regenerable,
+        Rule(id: "derived-data", label: tr("Xcode DerivedData"), confidence: .regenerable,
              match: .childrenOf(expand("~/Library/Developer/Xcode/DerivedData")),
-             recovery: tr(en: "rebuilding the project", fr: "recompilation du projet")),
+             recovery: tr("rebuilding the project")),
 
         // --- Caches proper ---
-        Rule(id: "user-caches", label: tr(en: "application caches", fr: "caches applicatifs"), confidence: .cache,
+        Rule(id: "user-caches", label: tr("application caches"), confidence: .cache,
              match: .childrenOf(expand("~/Library/Caches")),
-             recovery: tr(en: "refills with use", fr: "se reremplit à l'usage")),
-        Rule(id: "xdg-cache", label: tr(en: "command-line tool caches", fr: "caches d'outils en ligne de commande"), confidence: .cache,
+             recovery: tr("refills with use")),
+        Rule(id: "xdg-cache", label: tr("command-line tool caches"), confidence: .cache,
              match: .childrenOf(expand("~/.cache")),
-             recovery: tr(en: "refills with use", fr: "se reremplit à l'usage")),
-        Rule(id: "npm-cache", label: tr(en: "npm cache", fr: "cache npm"), confidence: .cache,
-             match: .exact(expand("~/.npm/_cacache")), recovery: tr(en: "downloaded again when needed", fr: "retéléchargé au besoin")),
-        Rule(id: "cargo-cache", label: tr(en: "Cargo package cache", fr: "cache des paquets Cargo"), confidence: .cache,
-             match: .exact(expand("~/.cargo/registry/cache")), recovery: tr(en: "downloaded again when needed", fr: "retéléchargé au besoin")),
-        Rule(id: "gradle-cache", label: tr(en: "global Gradle cache", fr: "cache Gradle global"), confidence: .cache,
-             match: .exact(expand("~/.gradle/caches")), recovery: tr(en: "downloaded again when needed", fr: "retéléchargé au besoin")),
-        Rule(id: "simulator-caches", label: tr(en: "Simulator caches", fr: "caches du simulateur"), confidence: .cache,
+             recovery: tr("refills with use")),
+        Rule(id: "npm-cache", label: tr("npm cache"), confidence: .cache,
+             match: .exact(expand("~/.npm/_cacache")), recovery: tr("downloaded again when needed")),
+        Rule(id: "cargo-cache", label: tr("Cargo package cache"), confidence: .cache,
+             match: .exact(expand("~/.cargo/registry/cache")), recovery: tr("downloaded again when needed")),
+        Rule(id: "gradle-cache", label: tr("global Gradle cache"), confidence: .cache,
+             match: .exact(expand("~/.gradle/caches")), recovery: tr("downloaded again when needed")),
+        Rule(id: "simulator-caches", label: tr("Simulator caches"), confidence: .cache,
              match: .exact(expand("~/Library/Developer/CoreSimulator/Caches")),
-             recovery: tr(en: "recreated by Xcode", fr: "recréé par Xcode")),
-        Rule(id: "logs", label: tr(en: "application logs", fr: "journaux applicatifs"), confidence: .cache,
-             match: .childrenOf(expand("~/Library/Logs")), recovery: tr(en: "not applicable", fr: "sans objet")),
-        Rule(id: "pnpm-store", label: tr(en: "pnpm store", fr: "magasin pnpm"), confidence: .cache,
-             match: .exact(expand("~/Library/pnpm/store")), recovery: tr(en: "downloaded again when needed", fr: "retéléchargé au besoin")),
-        Rule(id: "go-mod-cache", label: tr(en: "Go module cache", fr: "cache des modules Go"), confidence: .cache,
-             match: .exact(expand("~/go/pkg/mod/cache")), recovery: tr(en: "downloaded again when needed", fr: "retéléchargé au besoin")),
-        Rule(id: "maven", label: tr(en: "Maven repository", fr: "dépôt Maven local"), confidence: .cache,
-             match: .exact(expand("~/.m2/repository")), recovery: tr(en: "downloaded again when needed", fr: "retéléchargé au besoin")),
-        Rule(id: "cargo-src", label: tr(en: "Cargo extracted sources", fr: "sources extraites par Cargo"), confidence: .cache,
-             match: .exact(expand("~/.cargo/registry/src")), recovery: tr(en: "re-extracted from the cache", fr: "réextraites du cache")),
-        Rule(id: "xcode-previews", label: tr(en: "Xcode previews", fr: "aperçus Xcode"), confidence: .cache,
-             match: .exact(expand("~/Library/Developer/Xcode/UserData/Previews")), recovery: tr(en: "recreated by Xcode", fr: "recréé par Xcode")),
+             recovery: tr("recreated by Xcode")),
+        Rule(id: "logs", label: tr("application logs"), confidence: .cache,
+             match: .childrenOf(expand("~/Library/Logs")), recovery: tr("not applicable")),
+        Rule(id: "pnpm-store", label: tr("pnpm store"), confidence: .cache,
+             match: .exact(expand("~/Library/pnpm/store")), recovery: tr("downloaded again when needed")),
+        Rule(id: "go-mod-cache", label: tr("Go module cache"), confidence: .cache,
+             match: .exact(expand("~/go/pkg/mod/cache")), recovery: tr("downloaded again when needed")),
+        Rule(id: "maven", label: tr("Maven repository"), confidence: .cache,
+             match: .exact(expand("~/.m2/repository")), recovery: tr("downloaded again when needed")),
+        Rule(id: "cargo-src", label: tr("Cargo extracted sources"), confidence: .cache,
+             match: .exact(expand("~/.cargo/registry/src")), recovery: tr("re-extracted from the cache")),
+        Rule(id: "xcode-previews", label: tr("Xcode previews"), confidence: .cache,
+             match: .exact(expand("~/Library/Developer/Xcode/UserData/Previews")), recovery: tr("recreated by Xcode")),
 
         // --- Reported, never touched ---
-        Rule(id: "ios-backups", label: tr(en: "iOS backups", fr: "sauvegardes iOS"), confidence: .review,
+        Rule(id: "ios-backups", label: tr("iOS backups"), confidence: .review,
              match: .childrenOf(expand("~/Library/Application Support/MobileSync/Backup")),
-             recovery: tr(en: "NONE — this is the device's backup", fr: "AUCUNE — c'est la sauvegarde de l'appareil")),
-        Rule(id: "device-support", label: tr(en: "iOS device symbols", fr: "symboles d'appareils iOS"), confidence: .review,
+             recovery: tr("NONE — this is the device's backup")),
+        Rule(id: "device-support", label: tr("iOS device symbols"), confidence: .review,
              match: .childrenOf(expand("~/Library/Developer/Xcode/iOS DeviceSupport")),
-             recovery: tr(en: "copied again when that device is next plugged in", fr: "recopiés au prochain branchement de l'appareil concerné")),
-        Rule(id: "archives", label: tr(en: "Xcode archives", fr: "archives Xcode"), confidence: .review,
+             recovery: tr("copied again when that device is next plugged in")),
+        Rule(id: "archives", label: tr("Xcode archives"), confidence: .review,
              match: .childrenOf(expand("~/Library/Developer/Xcode/Archives")),
-             recovery: tr(en: "NONE — these are the shipped binaries, with their dSYMs", fr: "AUCUNE — ce sont les binaires livrés, avec leurs dSYM")),
-        Rule(id: "simulators", label: tr(en: "installed simulators", fr: "simulateurs installés"), confidence: .review,
+             recovery: tr("NONE — these are the shipped binaries, with their dSYMs")),
+        Rule(id: "simulators", label: tr("installed simulators"), confidence: .review,
              match: .childrenOf(expand("~/Library/Developer/CoreSimulator/Devices")),
-             recovery: tr(en: "xcrun simctl delete unavailable — simulator state", fr: "xcrun simctl delete unavailable — état des simulateurs")),
-        Rule(id: "trash", label: tr(en: "Trash", fr: "corbeille"), confidence: .review,
+             recovery: tr("xcrun simctl delete unavailable — simulator state")),
+        Rule(id: "trash", label: tr("Trash"), confidence: .review,
              match: .exact(expand("~/.Trash")),
-             recovery: tr(en: "NONE — empty it from the Finder if that is what you want", fr: "AUCUNE — vider depuis le Finder si c'est voulu")),
+             recovery: tr("NONE — empty it from the Finder if that is what you want")),
         // Docker's disk image is one sparse file that only ever grows: the
         // right move is `docker system prune` from inside, not deleting the
         // image and every container with it.
-        Rule(id: "docker-raw", label: tr(en: "Docker disk image", fr: "image disque Docker"), confidence: .review,
+        Rule(id: "docker-raw", label: tr("Docker disk image"), confidence: .review,
              match: .exact(expand("~/Library/Containers/com.docker.docker/Data/vms/0/data")),
              contents: ["Docker.raw"],
-             recovery: tr(en: "docker system prune — reclaims from inside; deleting loses every container and image",
-                          fr: "docker system prune — récupère de l'intérieur ; supprimer perd conteneurs et images")),
-        Rule(id: "android-avd", label: tr(en: "Android virtual devices", fr: "appareils virtuels Android"), confidence: .review,
+             recovery: tr("docker system prune — reclaims from inside; deleting loses every container and image")),
+        Rule(id: "android-avd", label: tr("Android virtual devices"), confidence: .review,
              match: .childrenOf(expand("~/.android/avd")),
-             recovery: tr(en: "recreated from Android Studio — their state is lost", fr: "recréés depuis Android Studio — leur état est perdu")),
+             recovery: tr("recreated from Android Studio — their state is lost")),
     ] }
 
     // MARK: - Guards
@@ -256,29 +252,29 @@ enum Reclaim {
     /// because a scan is a photograph and the disk keeps moving.
     static func verify(_ path: String, rule: Rule) -> String? {
         var info = stat()
-        guard lstat(path, &info) == 0 else { return tr(en: "has disappeared", fr: "a disparu") }
+        guard lstat(path, &info) == 0 else { return tr("has disappeared") }
         // The symlink test has to come before the directory test: lstat
         // reports a link as a link, so the other order never named it.
-        if (info.st_mode & S_IFMT) == S_IFLNK { return tr(en: "is a symbolic link", fr: "est un lien symbolique") }
-        guard (info.st_mode & S_IFMT) == S_IFDIR else { return tr(en: "is no longer a folder", fr: "n'est plus un dossier") }
-        if isProtected(path) { return tr(en: "is in a protected area", fr: "est dans une zone protégée") }
+        if (info.st_mode & S_IFMT) == S_IFLNK { return tr("is a symbolic link") }
+        guard (info.st_mode & S_IFMT) == S_IFDIR else { return tr("is no longer a folder") }
+        if isProtected(path) { return tr("is in a protected area") }
 
         // A working tree is not build output, whatever it is called.
-        if exists(path + "/.git") { return tr(en: "contains a git repository", fr: "contient un dépôt git") }
+        if exists(path + "/.git") { return tr("contains a git repository") }
 
         let parent = (path as NSString).deletingLastPathComponent
         if !rule.siblings.isEmpty {
             let found = rule.siblings.first { exists(parent + "/" + $0) }
             guard found != nil else {
-                return tr(en: "no %@ beside it", fr: "aucun %@ à côté",
-                          rule.siblings.joined(separator: tr(en: " or ", fr: " ou ")))
+                return tr("no %@ beside it",
+                          rule.siblings.joined(separator: tr(" or ")))
             }
         }
         if !rule.contents.isEmpty {
             let found = rule.contents.first { exists(path + "/" + $0) }
             guard found != nil else {
-                return tr(en: "does not contain %@", fr: "ne contient pas %@",
-                          rule.contents.joined(separator: tr(en: " or ", fr: " ou ")))
+                return tr("does not contain %@",
+                          rule.contents.joined(separator: tr(" or ")))
             }
         }
         return nil
@@ -413,10 +409,9 @@ extension Renderer {
     func reclaimSection(_ findings: Reclaim.Findings, in result: ScanResult,
                         volume: VolumeReport, offerTrash: Bool = true) -> String {
         let candidates = findings.candidates
-        let heading = Style.bold(tr(en: "TO RECLAIM\n", fr: "À RÉCUPÉRER\n"))
+        let heading = Style.bold(tr("TO RECLAIM\n"))
         guard !candidates.isEmpty else {
-            return heading + "  " + Style.green(tr(en: "nothing here can be identified as safe to delete",
-                                                   fr: "rien d'identifiable comme sûr à supprimer ici")) + "\n"
+            return heading + "  " + Style.green(tr("nothing here can be identified as safe to delete")) + "\n"
         }
 
         var out = heading
@@ -439,11 +434,10 @@ extension Renderer {
                 out += " \(candidate.path)\n"
                 var notes = [candidate.rule.label]
                 if let age = candidate.age {
-                    notes.append(tr(en: "modified %@ ago", fr: "modifié il y a %@", humanDuration(age)))
+                    notes.append(tr("modified %@ ago", humanDuration(age)))
                 }
                 if shared > 10 << 20 {
-                    notes.append(Style.yellow(tr(en: "%@ shared outside this folder",
-                                                 fr: "%@ partagés hors de ce dossier", humanBytes(shared))))
+                    notes.append(Style.yellow(tr("%@ shared outside this folder", humanBytes(shared))))
                 }
                 out += Style.dim("             " + notes.joined(separator: " · "))
                 if confidence != .review {
@@ -452,35 +446,29 @@ extension Renderer {
                 out += "\n"
             }
             if group.count > topCount {
-                out += Style.dim(tr(en: "             … and %d more\n", fr: "             … et %d autres\n", group.count - topCount))
+                out += Style.dim(tr("             … and %d more\n", group.count - topCount))
             }
             if confidence == .review {
-                out += Style.dim(tr(en: "             cadastre never deletes these entries\n",
-                                    fr: "             cadastre ne supprime jamais ces entrées\n"))
+                out += Style.dim(tr("             cadastre never deletes these entries\n"))
             }
         }
 
-        out += "\n  " + Style.bold(tr(en: "TOTAL RECLAIMABLE  ", fr: "TOTAL RÉCUPÉRABLE  ") + humanBytes(combined)) + "\n"
+        out += "\n  " + Style.bold(tr("TOTAL RECLAIMABLE  ") + humanBytes(combined)) + "\n"
         if findings.ignoredCount > 0 {
-            out += Style.dim(tr(en: "  %d entries under 1 MB not listed (%@ in total)\n",
-                                fr: "  %d entrées sous 1 Mo non listées (%@ au total)\n",
+            out += Style.dim(tr("  %d entries under 1 MB not listed (%@ in total)\n",
                                 findings.ignoredCount, humanBytes(findings.ignoredBytes)))
         }
         if combined - individually > 1 << 20 {
-            out += Style.dim(tr(en: "  that is %@ more than deleting them one by one — these folders share blocks with each other\n",
-                                fr: "  soit %@ de plus qu'en les supprimant un par un — ces dossiers partagent des blocs entre eux\n",
+            out += Style.dim(tr("  that is %@ more than deleting them one by one — these folders share blocks with each other\n",
                                 humanBytes(combined - individually)))
         }
         if !volume.snapshots.isEmpty {
             out += "  " + Style.yellow("⚠ ")
-            out += tr(en: "%d local snapshot(s): the space only comes back when they expire\n",
-                      fr: "%d snapshot(s) local(aux) : l'espace ne reviendra qu'à leur expiration\n", volume.snapshots.count)
-            out += Style.dim(tr(en: "     tmutil deletelocalsnapshots / to force it, if you know what you are doing\n",
-                                fr: "     tmutil deletelocalsnapshots / pour forcer, si vous savez ce que vous faites\n"))
+            out += tr("%d local snapshot(s): the space only comes back when they expire\n", volume.snapshots.count)
+            out += Style.dim(tr("     tmutil deletelocalsnapshots / to force it, if you know what you are doing\n"))
         }
         if offerTrash {
-            out += Style.dim(tr(en: "\n  --trash to move them to the Trash (never rm), --trash --yes without confirmation\n",
-                                fr: "\n  --trash pour mettre à la corbeille (jamais rm), --trash --yes sans confirmation\n"))
+            out += Style.dim(tr("\n  --trash to move them to the Trash (never rm), --trash --yes without confirmation\n"))
         }
         return out
     }
@@ -495,19 +483,18 @@ extension Reclaim {
     static func trash(_ candidates: [Candidate], in result: ScanResult, confirm: Bool) -> Int {
         let removable = candidates.filter { $0.rule.confidence != .review }
         guard !removable.isEmpty else {
-            print(tr(en: "  nothing to move to the Trash", fr: "  rien à mettre à la corbeille"))
+            print(tr("  nothing to move to the Trash"))
             return 0
         }
 
         if confirm {
             let total = combinedFreed(removable, in: result)
-            print(tr(en: "\n  %d folders to the Trash, %@ to reclaim.",
-                     fr: "\n  %d dossiers vers la corbeille, %@ à récupérer.", removable.count, humanBytes(total)))
-            print(tr(en: "  Type “yes” to confirm: ", fr: "  Taper « oui » pour confirmer : "), terminator: "")
+            print(tr("\n  %d folders to the Trash, %@ to reclaim.", removable.count, humanBytes(total)))
+            print(tr("  Type “yes” to confirm: "), terminator: "")
             let accepted = ["yes", "y", "oui", "o"]
             guard let answer = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
                   accepted.contains(answer) else {
-                print(tr(en: "  cancelled, nothing was touched", fr: "  annulé, rien n'a été touché"))
+                print(tr("  cancelled, nothing was touched"))
                 return 0
             }
         }
@@ -515,24 +502,23 @@ extension Reclaim {
         var moved: [Candidate] = []
         for candidate in removable {
             if let problem = verify(candidate.path, rule: candidate.rule) {
-                print("  " + Style.yellow(tr(en: "skipped", fr: "passé")) + "  \(candidate.path)  (\(problem))")
+                print("  " + Style.yellow(tr("skipped")) + "  \(candidate.path)  (\(problem))")
                 continue
             }
             do {
                 try FileManager.default.trashItem(at: URL(fileURLWithPath: candidate.path),
                                                   resultingItemURL: nil)
                 moved.append(candidate)
-                print("  " + Style.green(tr(en: "trashed", fr: "corbeille")) + "  \(candidate.path)")
+                print("  " + Style.green(tr("trashed")) + "  \(candidate.path)")
             } catch {
-                print("  " + Style.red(tr(en: "failed", fr: "échec")) + "  \(candidate.path)  (\(error.localizedDescription))")
+                print("  " + Style.red(tr("failed")) + "  \(candidate.path)  (\(error.localizedDescription))")
             }
         }
         // The total is recomputed over what actually moved: blocks shared
         // between two of these are freed only because both went, so the figure
         // is not the sum of the parts.
         let freed = combinedFreed(moved, in: result)
-        print(tr(en: "\n  %d folders moved, %@ reclaimable once the Trash is emptied",
-                 fr: "\n  %d dossiers déplacés, %@ récupérables une fois la corbeille vidée", moved.count, humanBytes(freed)))
+        print(tr("\n  %d folders moved, %@ reclaimable once the Trash is emptied", moved.count, humanBytes(freed)))
         return moved.count
     }
 }

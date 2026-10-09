@@ -153,22 +153,20 @@ private final class EmptyStateView: NSView {
         icon.widthAnchor.constraint(equalToConstant: 96).isActive = true
         icon.heightAnchor.constraint(equalToConstant: 96).isActive = true
 
-        let title = NSTextField(labelWithString: tr(en: "Measure a folder", fr: "Mesurer un dossier"))
+        let title = NSTextField(labelWithString: tr("Measure a folder"))
         title.font = .systemFont(ofSize: 22, weight: .semibold)
         title.alignment = .center
-        let subtitle = NSTextField(wrappingLabelWithString: tr(
-            en: "Choose one, or drop it here. On APFS, “how big is it” and “what do I get back if I delete it” are two different questions — the map answers both.",
-            fr: "Choisissez-en un, ou déposez-le ici. Sur APFS, « quelle taille ça fait » et « qu'est-ce que je récupère si je le supprime » sont deux questions différentes — la carte répond aux deux."))
+        let subtitle = NSTextField(wrappingLabelWithString: tr("Choose one, or drop it here. On APFS, “how big is it” and “what do I get back if I delete it” are two different questions — the map answers both."))
         subtitle.font = .systemFont(ofSize: 13)
         subtitle.textColor = .secondaryLabelColor
         subtitle.alignment = .center
         subtitle.preferredMaxLayoutWidth = 420
 
-        let button = NSButton(title: tr(en: "Choose a folder…", fr: "Choisir un dossier…"), target: self, action: #selector(open))
+        let button = NSButton(title: tr("Choose a folder…"), target: self, action: #selector(open))
         button.bezelStyle = .rounded
         button.controlSize = .large
         button.keyEquivalent = "\r"
-        let whole = NSButton(title: tr(en: "Measure this Mac", fr: "Mesurer ce Mac"), target: self, action: #selector(wholeDisk))
+        let whole = NSButton(title: tr("Measure this Mac"), target: self, action: #selector(wholeDisk))
         whole.bezelStyle = .rounded
         whole.controlSize = .large
         whole.isHidden = !WholeDisk.isAvailable
@@ -210,7 +208,7 @@ private final class EmptyStateView: NSView {
         recents.arrangedSubviews.forEach { $0.removeFromSuperview() }
         let paths = RecentFolders.all
         guard !paths.isEmpty else { return }
-        let header = NSTextField(labelWithString: tr(en: "RECENT", fr: "RÉCENTS"))
+        let header = NSTextField(labelWithString: tr("RECENT"))
         header.font = .systemFont(ofSize: 10, weight: .semibold)
         header.textColor = .tertiaryLabelColor
         recents.addArrangedSubview(header)
@@ -404,10 +402,10 @@ final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate
             colorPicker.addItem(withTitle: mode.label)
             colorPicker.lastItem?.toolTip = mode.explanation
         }
-        baselinePicker.addItem(withTitle: tr(en: "no marker", fr: "sans repère"))
+        baselinePicker.addItem(withTitle: tr("no marker"))
         baselinePicker.isEnabled = false
 
-        searchItem.searchField.placeholderString = tr(en: "Find by name", fr: "Chercher un nom")
+        searchItem.searchField.placeholderString = tr("Find by name")
         searchItem.searchField.sendsWholeSearchString = false
         searchItem.searchField.sendsSearchStringImmediately = true
         searchItem.searchField.target = self
@@ -415,8 +413,7 @@ final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate
         searchItem.searchField.delegate = self
         searchItem.preferredWidthForSearchField = 170
         searchItem.resignsFirstResponderWithCancel = true
-        searchItem.toolTip = tr(en: "Highlight everything whose name contains this (⌘F)",
-                                fr: "Met en avant tout ce dont le nom contient ceci (⌘F)")
+        searchItem.toolTip = tr("Highlight everything whose name contains this (⌘F)")
     }
 
     private func buildMapPane() -> NSView {
@@ -457,7 +454,7 @@ final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate
         let progressLabel = NSTextField(labelWithString: "")
         progressLabel.font = .monospacedDigitSystemFont(ofSize: 13, weight: .regular)
         progressText = progressLabel
-        let cancel = NSButton(title: tr(en: "Stop", fr: "Arrêter"), target: self, action: #selector(cancelScan))
+        let cancel = NSButton(title: tr("Stop"), target: self, action: #selector(cancelScan))
         cancel.bezelStyle = .rounded
         cancel.controlSize = .small
         cancel.keyEquivalent = "."
@@ -586,20 +583,20 @@ final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate
             let row = grid.addRow(with: [name, value])
             rows[key] = (name, value, row)
         }
-        header("size", tr(en: "Size", fr: "Taille"))
+        header("size", tr("Size"))
         row("logical", Metric.logical.shortTitle)
         row("allocated", Metric.allocated.shortTitle)
         row("attributed", Metric.attributed.shortTitle)
         row("retained", Metric.retained.shortTitle)
-        row("shared", tr(en: "shared elsewhere", fr: "partagé ailleurs"))
-        row("free", tr(en: "free on disk", fr: "libre sur le disque"))
-        header("baseline", tr(en: "Since the marker", fr: "Depuis le repère"))
-        row("delta", tr(en: "change", fr: "écart"))
-        row("written", tr(en: "written", fr: "écrit"))
-        header("nature", tr(en: "Nature", fr: "Nature"))
-        row("kind", tr(en: "kind", fr: "nature"))
-        row("entries", tr(en: "entries", fr: "entrées"))
-        row("status", tr(en: "status", fr: "statut"))
+        row("shared", tr("shared elsewhere"))
+        row("free", tr("free on disk"))
+        header("baseline", tr("Since the marker"))
+        row("delta", tr("change"))
+        row("written", tr("written"))
+        header("nature", tr("Nature"))
+        row("kind", tr("kind"))
+        row("entries", tr("entries"))
+        row("status", tr("status"))
         rows["attributed"]?.1.font = .monospacedDigitSystemFont(ofSize: 12, weight: .semibold)
         rows["attributed"]?.0.font = .systemFont(ofSize: 12, weight: .semibold)
         rows["attributed"]?.0.textColor = .labelColor
@@ -626,7 +623,7 @@ final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate
         scroll.drawsBackground = false
 
         let divider = NSBox(); divider.boxType = .separator
-        let levelHeader = NSTextField(labelWithString: tr(en: "THIS LEVEL", fr: "CE NIVEAU"))
+        let levelHeader = NSTextField(labelWithString: tr("THIS LEVEL"))
         levelHeader.font = .systemFont(ofSize: 9.5, weight: .semibold)
         levelHeader.textColor = .tertiaryLabelColor
 
@@ -638,8 +635,7 @@ final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate
         head.setCustomSpacing(4, after: shareBar)
         shareBar.translatesAutoresizingMaskIntoConstraints = false
 
-        inspectorPlaceholder.stringValue = tr(en: "Nothing measured yet.\n\nOnce a folder is on the map, this panel describes whatever the pointer is over, and lists the current level.",
-                                              fr: "Rien de mesuré pour l'instant.\n\nUne fois un dossier sur la carte, ce panneau décrit ce qui est sous le pointeur, et liste le niveau courant.")
+        inspectorPlaceholder.stringValue = tr("Nothing measured yet.\n\nOnce a folder is on the map, this panel describes whatever the pointer is over, and lists the current level.")
         inspectorPlaceholder.font = .systemFont(ofSize: 12)
         inspectorPlaceholder.textColor = .tertiaryLabelColor
         inspectorPlaceholder.alignment = .center
@@ -691,22 +687,19 @@ final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate
         emptyState.isHidden = true
         overlay.isHidden = false
         spinner.startAnimation(nil)
-        progressText?.stringValue = tr(en: "reading the volumes…", fr: "lecture des volumes…")
+        progressText?.stringValue = tr("reading the volumes…")
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             let context = WholeDisk.gather()
             DispatchQueue.main.async {
                 guard let self else { return }
                 if !context.hasFullDiskAccess {
                     let alert = NSAlert()
-                    alert.messageText = tr(en: "Cadastre has no Full Disk Access", fr: "Cadastre n'a pas l'accès disque complet")
-                    alert.informativeText = tr(
-                        en: "Without it, Mail, Messages, Safari and the iOS backups read as empty, and the total is a floor. "
-                          + "Grant it under System Settings › Privacy & Security › Full Disk Access, then measure again.",
-                        fr: "Sans lui, Mail, Messages, Safari et les sauvegardes iOS se lisent comme vides, et le total est un plancher. "
-                          + "Accordez-le dans Réglages Système › Confidentialité et sécurité › Accès complet au disque, puis mesurez à nouveau.")
-                    alert.addButton(withTitle: tr(en: "Measure Anyway", fr: "Mesurer quand même"))
-                    alert.addButton(withTitle: tr(en: "Open System Settings", fr: "Ouvrir les Réglages Système"))
-                    alert.addButton(withTitle: tr(en: "Cancel", fr: "Annuler"))
+                    alert.messageText = tr("Cadastre has no Full Disk Access")
+                    alert.informativeText = tr("Without it, Mail, Messages, Safari and the iOS backups read as empty, and the total is a floor. "
+                          + "Grant it under System Settings › Privacy & Security › Full Disk Access, then measure again.")
+                    alert.addButton(withTitle: tr("Measure Anyway"))
+                    alert.addButton(withTitle: tr("Open System Settings"))
+                    alert.addButton(withTitle: tr("Cancel"))
                     let response = alert.runModal()
                     if response == .alertSecondButtonReturn {
                         NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles")!)
@@ -728,14 +721,14 @@ final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate
         var isDirectory: ObjCBool = false
         guard FileManager.default.fileExists(atPath: path, isDirectory: &isDirectory),
               isDirectory.boolValue else {
-            flash(tr(en: "Folder not found", fr: "Dossier introuvable"), detail: path, warning: true)
+            flash(tr("Folder not found"), detail: path, warning: true)
             if session == nil { showEmptyState() }
             return
         }
         scanTask?.cancel()
         emptyState.isHidden = true
         if quiet {
-            status.stringValue = "◌ " + tr(en: "measuring again…", fr: "nouvelle mesure…")
+            status.stringValue = "◌ " + tr("measuring again…")
             status.textColor = .controlAccentColor
         } else {
             overlay.isHidden = false
@@ -744,7 +737,7 @@ final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate
         let wholeDisk = pendingWholeDisk
         pendingWholeDisk = nil
         let shortName = wholeDisk?.displayName ?? (path as NSString).lastPathComponent
-        progressText?.stringValue = tr(en: "measuring %@…", fr: "analyse de %@…", shortName)
+        progressText?.stringValue = tr("measuring %@…", shortName)
         window.title = "Cadastre — \(shortName)"
 
         let baseline = pendingBaseline
@@ -756,7 +749,7 @@ final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate
         var task: ScanTask? = nil
         task = ScanJob.run(path: path) { [weak self] done, queued in
             guard !quiet else { return }
-            self?.progressText?.stringValue = tr(en: "%@ folders, %@ queued…", fr: "%@ dossiers, %@ en attente…",
+            self?.progressText?.stringValue = tr("%@ folders, %@ queued…",
                                                  L10n.count(done), L10n.count(queued))
         } completion: { [weak self] result, reclaim, startedAt in
             guard let self, self.scanTask === task else { return }   // superseded by a newer scan
@@ -841,7 +834,7 @@ final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate
 
     @objc private func cancelScan() {
         scanTask?.cancel()
-        progressText?.stringValue = tr(en: "stopping…", fr: "arrêt…")
+        progressText?.stringValue = tr("stopping…")
     }
 
     private func adopt(_ session: Session) {
@@ -856,7 +849,7 @@ final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate
         refreshCaptions()
         refreshStatus()
         window.subtitle = session.isWholeDisk
-            ? tr(en: "whole disk · %@", fr: "disque entier · %@", session.path)
+            ? tr("whole disk · %@", session.path)
             : session.path.replacingOccurrences(of: NSHomeDirectory(), with: "~")
         // A rescan should leave you where you were, not at the top.
         let restored = pendingTrail.isEmpty ? 0 : locate(pendingTrail)
@@ -898,18 +891,18 @@ final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate
     private func refreshStatus() {
         guard let session else { status.stringValue = ""; return }
         if let summary = searchSummary {
-            status.stringValue = tr(en: "%@ matches · %@", fr: "%@ correspondances · %@",
+            status.stringValue = tr("%@ matches · %@",
                                     L10n.count(summary.matches), humanBytes(summary.bytes))
             status.textColor = .controlAccentColor
             return
         }
         let stats = session.result.stats
-        var text = tr(en: "%@ folders · %@ files · %.1f s", fr: "%@ dossiers · %@ fichiers · %.1f s",
+        var text = tr("%@ folders · %@ files · %.1f s",
                       L10n.count(stats.directories), L10n.count(stats.files), stats.elapsed)
-        if isLive { text = "● " + tr(en: "live", fr: "en direct") + " · " + text }
-        if session.isPartial { text = "⚠ " + tr(en: "partial — scan stopped", fr: "partiel — scan interrompu") + " · " + text }
+        if isLive { text = "● " + tr("live") + " · " + text }
+        if session.isPartial { text = "⚠ " + tr("partial — scan stopped") + " · " + text }
         else if stats.deniedDirectories > 0 {
-            text = "⚠ " + tr(en: "%d folders refused", fr: "%d dossiers refusés", stats.deniedDirectories) + " · " + text
+            text = "⚠ " + tr("%d folders refused", stats.deniedDirectories) + " · " + text
         }
         status.stringValue = text
         status.textColor = session.isPartial || stats.deniedDirectories > 0 ? Palette.statusWarning.nsColor : .secondaryLabelColor
@@ -937,21 +930,19 @@ final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate
         do {
             let file = try session.mark()
             refreshBaselineMenu()
-            flash(tr(en: "Marker placed", fr: "Repère posé"),
-                  detail: tr(en: "%@\n\nPick it under “compare to” after a later scan to see what changed.",
-                             fr: "%@\n\nChoisissez-le dans « comparer à » après un prochain scan pour voir ce qui a bougé.",
+            flash(tr("Marker placed"),
+                  detail: tr("%@\n\nPick it under “compare to” after a later scan to see what changed.",
                              (file as NSString).lastPathComponent))
         } catch {
-            flash(tr(en: "Could not place the marker", fr: "Repère impossible"), detail: "\(error)", warning: true)
+            flash(tr("Could not place the marker"), detail: "\(error)", warning: true)
         }
     }
 
     @objc func showReclaim() {
         guard let session else { return }
         guard !session.reclaim.isEmpty else {
-            flash(tr(en: "Nothing to reclaim", fr: "Rien à récupérer"),
-                  detail: tr(en: "No entry of the catalogue was recognised here.",
-                             fr: "Aucune entrée du catalogue n'a été reconnue ici."))
+            flash(tr("Nothing to reclaim"),
+                  detail: tr("No entry of the catalogue was recognised here."))
             return
         }
         let sheet = ReclaimSheet(session: session) { [weak self] moves in
@@ -1025,9 +1016,9 @@ final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate
                                       colorMode: ColorMode.allCases[colorPicker.indexOfSelectedItem],
                                       mode: mode, size: CGSize(width: 1600, height: 1000),
                                       to: url.path)
-            flash(tr(en: "Map exported", fr: "Carte exportée"), detail: url.lastPathComponent)
+            flash(tr("Map exported"), detail: url.lastPathComponent)
         } catch {
-            flash(tr(en: "Export failed", fr: "Export impossible"), detail: "\(error)", warning: true)
+            flash(tr("Export failed"), detail: "\(error)", warning: true)
         }
     }
 
@@ -1070,39 +1061,6 @@ final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate
         colorChanged()
     }
 
-    /// Switching language rebuilds the window rather than relabelling it:
-    /// every control, menu and sheet was built with `tr()` at construction,
-    /// so a fresh controller is the one place that gets all of them. The
-    /// scan is redone too — the catalogue's labels live in the session.
-    @objc func chooseLanguage(_ sender: NSMenuItem) {
-        guard let language = sender.representedObject as? Language, language != L10n.language else { return }
-        L10n.store(language)
-        L10n.language = language
-
-        let fresh = CadastreWindow(metric: defaultMetric, baseline: nil)
-        fresh.colorPicker.selectItem(at: colorPicker.indexOfSelectedItem)
-        fresh.colorChanged()
-        fresh.window.setFrame(window.frame, display: false)
-        if let session {
-            fresh.pendingTrail = trail()
-            fresh.pendingBaseline = session.baselineIsPreviousMeasure ? nil : session.baseline
-            fresh.pendingBaselinePath = session.baselinePath
-            if session.isWholeDisk {
-                fresh.pendingWholeDisk = WholeDisk.Context(displayName: session.displayName ?? "", extras: session.extras,
-                                                           hasFullDiskAccess: true)
-            }
-        }
-        (NSApp.delegate as? AppDelegate)?.controller = fresh
-        NSApp.mainMenu = fresh.buildMenu()
-        fresh.window.makeKeyAndOrderFront(nil)
-        if let session { fresh.scan(path: session.path) }
-
-        scanTask?.cancel()
-        watcher?.stop()
-        window.delegate = nil
-        window.close()
-    }
-
     // MARK: - Undo
 
     /// Moving to the Trash is reversible by construction; this makes it
@@ -1120,16 +1078,15 @@ final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate
                 restored += 1
             }
             if restored < moves.count {
-                me.flash(tr(en: "Could not put everything back", fr: "Impossible de tout remettre"),
-                         detail: tr(en: "%d of %d items restored. The rest is still in the Trash.",
-                                    fr: "%d éléments sur %d remis en place. Le reste est toujours dans la corbeille.",
+                me.flash(tr("Could not put everything back"),
+                         detail: tr("%d of %d items restored. The rest is still in the Trash.",
                                     restored, moves.count), warning: true)
             }
             me.rescan()
         }
         undoStack.setActionName(moves.count == 1
-            ? tr(en: "Move to Trash", fr: "Mettre à la corbeille")
-            : tr(en: "Move %d Items to Trash", fr: "Mettre %d éléments à la corbeille", moves.count))
+            ? tr("Move to Trash")
+            : tr("Move %d Items to Trash", moves.count))
     }
 
     @objc func undoTrash() { undoStack.undo() }
@@ -1161,7 +1118,7 @@ final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate
         let line = NSMutableAttributedString()
         let oneLine = NSMutableParagraphStyle()
         oneLine.lineBreakMode = .byTruncatingTail
-        line.append(NSAttributedString(string: tr(en: "Area · ", fr: "Surface · "), attributes: [
+        line.append(NSAttributedString(string: tr("Area · "), attributes: [
             .foregroundColor: NSColor.tertiaryLabelColor,
             .font: NSFont.preferredFont(forTextStyle: .caption1),
         ]))
@@ -1176,7 +1133,7 @@ final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate
         ]))
         line.addAttribute(.paragraphStyle, value: oneLine, range: NSRange(location: 0, length: line.length))
         metricLine.attributedStringValue = line
-        legend.caption = tr(en: "Colour · ", fr: "Couleur · ") + colour.label
+        legend.caption = tr("Colour · ") + colour.label
     }
 
     @objc private func baselineChanged() {
@@ -1192,7 +1149,7 @@ final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate
             do {
                 session.adopt(baseline: Snapshot(try ScanIndex.read(entry.path)), from: entry.path)
             } catch {
-                flash(tr(en: "Unreadable marker", fr: "Repère illisible"), detail: "\(error)", warning: true)
+                flash(tr("Unreadable marker"), detail: "\(error)", warning: true)
                 baselinePicker.selectItem(at: 0)
                 return
             }
@@ -1210,17 +1167,17 @@ final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate
     private func refreshBaselineMenu() {
         guard let session else { return }
         baselinePicker.removeAllItems()
-        baselinePicker.addItem(withTitle: tr(en: "no marker", fr: "sans repère"))
+        baselinePicker.addItem(withTitle: tr("no marker"))
         let formatter = L10n.dateFormatter(template: "d MMM HH:mm")
         if session.baselineIsPreviousMeasure, let previous = session.baseline {
             let clock = L10n.dateFormatter(template: "HH:mm:ss")
-            baselinePicker.addItem(withTitle: tr(en: "since the measure of %@", fr: "depuis la mesure de %@",
+            baselinePicker.addItem(withTitle: tr("since the measure of %@",
                                                  clock.string(from: previous.scannedAt)))
             baselinePicker.lastItem?.isEnabled = false
         }
         let entries = session.history()
         for entry in entries {
-            baselinePicker.addItem(withTitle: tr(en: "compare to %@", fr: "comparer à %@", formatter.string(from: entry.date)))
+            baselinePicker.addItem(withTitle: tr("compare to %@", formatter.string(from: entry.date)))
         }
         let offset = session.baselineIsPreviousMeasure ? 2 : 1
         baselinePicker.isEnabled = !entries.isEmpty || session.baselineIsPreviousMeasure
@@ -1272,20 +1229,20 @@ final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate
         }
 
         if isDirectory && node != treemap.rootNode {
-            add(tr(en: "Zoom Here", fr: "Zoomer ici"), #selector(zoomHere))
+            add(tr("Zoom Here"), #selector(zoomHere))
             menu.item(at: 0)?.representedObject = node
             menu.addItem(.separator())
         }
-        add(tr(en: "Open", fr: "Ouvrir"), #selector(openInFinder))
-        add(tr(en: "Reveal in Finder", fr: "Révéler dans le Finder"), #selector(revealInFinder))
-        add(tr(en: "Copy Path", fr: "Copier le chemin"), #selector(copyPath))
+        add(tr("Open"), #selector(openInFinder))
+        add(tr("Reveal in Finder"), #selector(revealInFinder))
+        add(tr("Copy Path"), #selector(copyPath))
         menu.addItem(.separator())
 
         // Refused rather than greyed out where it would be wrong: the folder
         // being measured, and anything the reclaim guards consider off-limits.
         let removable = path != session.path && !Reclaim.isProtected(path)
         let sizes = session.model.sizes[Int(node)]
-        add(tr(en: "Move to Trash — frees %@", fr: "Mettre à la corbeille — libère %@", humanBytes(sizes.retained)),
+        add(tr("Move to Trash — frees %@", humanBytes(sizes.retained)),
             #selector(trashNode), enabled: removable)
         return menu
     }
@@ -1327,18 +1284,18 @@ final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate
 
         var info = stat()
         guard lstat(path, &info) == 0 else {
-            flash(tr(en: "Not found", fr: "Introuvable"),
-                  detail: tr(en: "%@\n\nThe map dates from the last scan.", fr: "%@\n\nLa carte date du dernier scan.", path),
+            flash(tr("Not found"),
+                  detail: tr("%@\n\nThe map dates from the last scan.", path),
                   warning: true)
             return
         }
 
         let alert = NSAlert()
-        alert.messageText = tr(en: "Move to the Trash?", fr: "Mettre à la corbeille ?")
+        alert.messageText = tr("Move to the Trash?")
         alert.informativeText = path
         alert.alertStyle = .warning
-        alert.addButton(withTitle: tr(en: "Move to Trash", fr: "Mettre à la corbeille"))
-        alert.addButton(withTitle: tr(en: "Cancel", fr: "Annuler"))
+        alert.addButton(withTitle: tr("Move to Trash"))
+        alert.addButton(withTitle: tr("Cancel"))
         alert.beginSheetModal(for: window) { [weak self] response in
             guard response == .alertFirstButtonReturn else { return }
             do {
@@ -1352,7 +1309,7 @@ final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate
                 // deletion is exactly the lie this program exists to avoid.
                 self?.rescan()
             } catch {
-                self?.flash(tr(en: "Could not move it", fr: "Impossible"), detail: error.localizedDescription, warning: true)
+                self?.flash(tr("Could not move it"), detail: error.localizedDescription, warning: true)
             }
         }
     }
@@ -1477,9 +1434,9 @@ final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate
             ? session.title
             : (model.name[Int(treemap.rootNode)] as NSString).lastPathComponent
         shareCaption.stringValue = node == treemap.rootNode
-            ? tr(en: "the whole of what is on screen", fr: "tout ce qui est à l'écran")
-            : String(format: "%.1f %% ", locale: L10n.language.locale, fraction * 100)
-              + tr(en: "of %@", fr: "de %@", rootName)
+            ? tr("the whole of what is on screen")
+            : fraction.formatted(.percent.precision(.fractionLength(1)).locale(L10n.language.locale))
+              + " " + tr("of %@", rootName)
 
         func set(_ key: String, _ value: String?, tint: NSColor? = nil) {
             guard let (name, field, row) = rows[key] else { return }
@@ -1498,8 +1455,9 @@ final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate
         if node == 0, session.isWholeDisk, let free = session.freeSpace {
             let capacity = Double(free.bytes + session.extras.filter { $0.kind != .free }.reduce(0) { $0 + $1.bytes }
                                   + model.sizes[0].attributed - (Session.showsFreeSpace ? free.bytes : 0))
-            set("free", humanBytes(free.bytes) + String(format: "  (%.0f %%)", locale: L10n.language.locale,
-                                                         Double(free.bytes) / max(capacity, 1) * 100),
+            let share = Double(free.bytes) / max(capacity, 1)
+            set("free", humanBytes(free.bytes) + "  ("
+                + share.formatted(.percent.precision(.fractionLength(0)).locale(L10n.language.locale)) + ")",
                 tint: .secondaryLabelColor)
         } else {
             set("free", nil)
@@ -1512,7 +1470,7 @@ final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate
             set("delta", signedBytes(change),
                 tint: change > 0 ? Palette.statusCritical.nsColor : change < 0 ? Palette.statusGood.nsColor : .labelColor)
             set("written", abs(written) * 4 < abs(change)
-                ? (written == 0 ? tr(en: "nothing", fr: "rien") : signedBytes(written)) : nil,
+                ? (written == 0 ? tr("nothing") : signedBytes(written)) : nil,
                 tint: Palette.mutedInk.nsColor)
         } else {
             set("delta", nil)
@@ -1522,7 +1480,7 @@ final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate
         // Naming the family is the other half of the palette's secondary
         // encoding: the swatch says which colour, this says which category.
         if model.isDirectory[index] {
-            set("kind", tr(en: "folder", fr: "dossier"))
+            set("kind", tr("folder"))
             set("entries", L10n.count(Int(model.childCount[index])))
         } else if model.isSynthetic(node) {
             set("kind", model.kind[index].label)
@@ -1603,9 +1561,6 @@ final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate
         case #selector(chooseColor(_:)):
             menuItem.state = menuItem.tag == colorPicker.indexOfSelectedItem ? .on : .off
             return true
-        case #selector(chooseLanguage(_:)):
-            menuItem.state = (menuItem.representedObject as? Language) == L10n.language ? .on : .off
-            return true
         case #selector(placeMarker), #selector(showReclaim), #selector(exportImage), #selector(rescan),
              #selector(backToRoot), #selector(focusSearch):
             return session != nil
@@ -1617,7 +1572,7 @@ final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate
             menuItem.state = isLive ? .on : .off
             return true
         case #selector(undoTrash):
-            menuItem.title = undoStack.canUndo ? undoStack.undoMenuItemTitle : tr(en: "Undo", fr: "Annuler")
+            menuItem.title = undoStack.canUndo ? undoStack.undoMenuItemTitle : tr("Undo")
             return undoStack.canUndo && scanTask == nil
         case #selector(toggleFreeSpace):
             menuItem.state = Session.showsFreeSpace ? .on : .off
@@ -1649,7 +1604,7 @@ final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate
             menu.addItem(item)
         }
         if !menu.items.isEmpty { menu.addItem(.separator()) }
-        let clear = NSMenuItem(title: tr(en: "Clear Menu", fr: "Effacer le menu"), action: #selector(clearRecents), keyEquivalent: "")
+        let clear = NSMenuItem(title: tr("Clear Menu"), action: #selector(clearRecents), keyEquivalent: "")
         clear.target = self
         menu.addItem(clear)
     }
@@ -1676,56 +1631,45 @@ final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate
         }
 
         // Application
-        let language = NSMenuItem(title: tr(en: "Language", fr: "Langue"), action: nil, keyEquivalent: "")
-        let languageMenu = NSMenu()
-        for candidate in Language.allCases {
-            let entry = NSMenuItem(title: candidate.name, action: #selector(chooseLanguage(_:)), keyEquivalent: "")
-            entry.target = self
-            entry.representedObject = candidate
-            languageMenu.addItem(entry)
-        }
-        language.submenu = languageMenu
         mainMenu.addItem(submenu("Cadastre", [
-            item(tr(en: "About Cadastre", fr: "À propos de Cadastre"), #selector(NSApplication.orderFrontStandardAboutPanel(_:)), target: NSApp),
+            item(tr("About Cadastre"), #selector(NSApplication.orderFrontStandardAboutPanel(_:)), target: NSApp),
             .separator(),
-            language,
-            .separator(),
-            item(tr(en: "Hide Cadastre", fr: "Masquer Cadastre"), #selector(NSApplication.hide(_:)), "h", target: NSApp),
-            item(tr(en: "Hide Others", fr: "Masquer les autres"), #selector(NSApplication.hideOtherApplications(_:)), "h",
+            item(tr("Hide Cadastre"), #selector(NSApplication.hide(_:)), "h", target: NSApp),
+            item(tr("Hide Others"), #selector(NSApplication.hideOtherApplications(_:)), "h",
                  modifiers: [.command, .option], target: NSApp),
-            item(tr(en: "Show All", fr: "Tout afficher"), #selector(NSApplication.unhideAllApplications(_:)), target: NSApp),
+            item(tr("Show All"), #selector(NSApplication.unhideAllApplications(_:)), target: NSApp),
             .separator(),
-            item(tr(en: "Quit Cadastre", fr: "Quitter Cadastre"), #selector(NSApplication.terminate(_:)), "q", target: NSApp),
+            item(tr("Quit Cadastre"), #selector(NSApplication.terminate(_:)), "q", target: NSApp),
         ]))
 
         // File
         recentMenu.delegate = self
-        let recent = NSMenuItem(title: tr(en: "Open Recent", fr: "Ouvrir un dossier récent"), action: nil, keyEquivalent: "")
+        let recent = NSMenuItem(title: tr("Open Recent"), action: nil, keyEquivalent: "")
         recent.submenu = recentMenu
-        mainMenu.addItem(submenu(tr(en: "File", fr: "Fichier"), [
-            item(tr(en: "Open Folder…", fr: "Ouvrir un dossier…"), #selector(openFolder), "o"),
+        mainMenu.addItem(submenu(tr("File"), [
+            item(tr("Open Folder…"), #selector(openFolder), "o"),
             recent,
-            item(tr(en: "Measure This Mac", fr: "Mesurer ce Mac"), #selector(scanWholeDisk), "o", modifiers: [.command, .shift]),
-            item(tr(en: "Measure Again", fr: "Mesurer à nouveau"), #selector(rescan), "r", modifiers: [.command, .shift]),
+            item(tr("Measure This Mac"), #selector(scanWholeDisk), "o", modifiers: [.command, .shift]),
+            item(tr("Measure Again"), #selector(rescan), "r", modifiers: [.command, .shift]),
             .separator(),
-            item(tr(en: "Place a Marker", fr: "Poser un repère"), #selector(placeMarker), "s"),
-            item(tr(en: "Reclaim Space…", fr: "Récupérer de l'espace…"), #selector(showReclaim), "r"),
-            item(tr(en: "What Changed…", fr: "Ce qui a bougé…"), #selector(showDiff), "d"),
-            item(tr(en: "Export Map…", fr: "Exporter la carte…"), #selector(exportImage), "e"),
+            item(tr("Place a Marker"), #selector(placeMarker), "s"),
+            item(tr("Reclaim Space…"), #selector(showReclaim), "r"),
+            item(tr("What Changed…"), #selector(showDiff), "d"),
+            item(tr("Export Map…"), #selector(exportImage), "e"),
             .separator(),
-            item(tr(en: "Reveal in Finder", fr: "Révéler dans le Finder"), #selector(revealInFinder(_:)), "r", modifiers: [.command, .option]),
-            item(tr(en: "Move to Trash", fr: "Mettre à la corbeille"), #selector(trashNode(_:)), "\u{8}"),
+            item(tr("Reveal in Finder"), #selector(revealInFinder(_:)), "r", modifiers: [.command, .option]),
+            item(tr("Move to Trash"), #selector(trashNode(_:)), "\u{8}"),
             .separator(),
-            item(tr(en: "Close", fr: "Fermer"), #selector(NSWindow.performClose(_:)), "w", target: nil),
+            item(tr("Close"), #selector(NSWindow.performClose(_:)), "w", target: nil),
         ]))
 
         // Edit
-        mainMenu.addItem(submenu(tr(en: "Edit", fr: "Édition"), [
-            item(tr(en: "Undo", fr: "Annuler"), #selector(undoTrash), "z"),
+        mainMenu.addItem(submenu(tr("Edit"), [
+            item(tr("Undo"), #selector(undoTrash), "z"),
             .separator(),
-            item(tr(en: "Copy Path", fr: "Copier le chemin"), #selector(copyPath(_:)), "c"),
+            item(tr("Copy Path"), #selector(copyPath(_:)), "c"),
             .separator(),
-            item(tr(en: "Find…", fr: "Rechercher…"), #selector(focusSearch), "f"),
+            item(tr("Find…"), #selector(focusSearch), "f"),
         ]))
 
         // View
@@ -1735,27 +1679,27 @@ final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate
         let colours = ColorMode.allCases.enumerated().map { position, mode in
             item(mode.label, #selector(chooseColor(_:)), "\(position + 1)", modifiers: [.command, .option], tag: position)
         }
-        mainMenu.addItem(submenu(tr(en: "View", fr: "Présentation"), [
-            submenu(tr(en: "Area", fr: "Surface"), metrics),
-            submenu(tr(en: "Colour", fr: "Couleur"), colours),
+        mainMenu.addItem(submenu(tr("View"), [
+            submenu(tr("Area"), metrics),
+            submenu(tr("Colour"), colours),
             .separator(),
-            item(tr(en: "Zoom Out", fr: "Remonter"), #selector(zoomOut), String(UnicodeScalar(NSUpArrowFunctionKey)!)),
-            item(tr(en: "Back to Top", fr: "Revenir à la racine"), #selector(backToRoot),
+            item(tr("Zoom Out"), #selector(zoomOut), String(UnicodeScalar(NSUpArrowFunctionKey)!)),
+            item(tr("Back to Top"), #selector(backToRoot),
                  String(UnicodeScalar(NSUpArrowFunctionKey)!), modifiers: [.command, .shift]),
             .separator(),
-            item(tr(en: "Follow Changes", fr: "Suivre les changements"), #selector(toggleLive), "l", modifiers: [.command, .shift]),
-            item(tr(en: "Show Free Space on the Map", fr: "Afficher l'espace libre sur la carte"), #selector(toggleFreeSpace)),
+            item(tr("Follow Changes"), #selector(toggleLive), "l", modifiers: [.command, .shift]),
+            item(tr("Show Free Space on the Map"), #selector(toggleFreeSpace)),
             .separator(),
-            item(tr(en: "Show/Hide Inspector", fr: "Afficher/masquer l'inspecteur"), #selector(toggleInspector), "i",
+            item(tr("Show/Hide Inspector"), #selector(toggleInspector), "i",
                  modifiers: [.command, .option]),
-            item(tr(en: "Enter Full Screen", fr: "Activer le mode plein écran"), #selector(NSWindow.toggleFullScreen(_:)), "f",
+            item(tr("Enter Full Screen"), #selector(NSWindow.toggleFullScreen(_:)), "f",
                  modifiers: [.command, .control], target: nil),
         ]))
 
         // Window
-        let windowMenu = submenu(tr(en: "Window", fr: "Fenêtre"), [
-            item(tr(en: "Minimize", fr: "Placer dans le Dock"), #selector(NSWindow.performMiniaturize(_:)), "m", target: nil),
-            item(tr(en: "Zoom", fr: "Réduire/agrandir"), #selector(NSWindow.performZoom(_:)), target: nil),
+        let windowMenu = submenu(tr("Window"), [
+            item(tr("Minimize"), #selector(NSWindow.performMiniaturize(_:)), "m", target: nil),
+            item(tr("Zoom"), #selector(NSWindow.performZoom(_:)), target: nil),
         ])
         mainMenu.addItem(windowMenu)
         NSApp.windowsMenu = windowMenu.submenu
@@ -1792,22 +1736,20 @@ extension CadastreWindow: NSToolbarDelegate {
 
         switch identifier {
         case .open:
-            item.label = tr(en: "Open", fr: "Ouvrir")
-            item.toolTip = tr(en: "Choose a folder to measure (⌘O)", fr: "Choisir un dossier à analyser (⌘O)")
+            item.label = tr("Open")
+            item.toolTip = tr("Choose a folder to measure (⌘O)")
             item.image = NSImage(systemSymbolName: "folder", accessibilityDescription: nil)
             item.target = self
             item.action = #selector(openFolder)
         case .mark:
-            item.label = tr(en: "Marker", fr: "Repère")
-            item.toolTip = tr(en: "Save the current state to compare against later (⌘S)",
-                              fr: "Enregistrer l'état actuel pour comparer plus tard (⌘S)")
+            item.label = tr("Marker")
+            item.toolTip = tr("Save the current state to compare against later (⌘S)")
             item.image = NSImage(systemSymbolName: "bookmark", accessibilityDescription: nil)
             item.target = self
             item.action = #selector(placeMarker)
         case .reclaim:
-            item.label = tr(en: "Reclaim", fr: "Récupérer")
-            item.toolTip = tr(en: "What is safe to delete, and the real gain (⌘R)",
-                              fr: "Ce qui est sûr à supprimer, et le gain réel (⌘R)")
+            item.label = tr("Reclaim")
+            item.toolTip = tr("What is safe to delete, and the real gain (⌘R)")
             item.image = NSImage(systemSymbolName: "trash", accessibilityDescription: nil)
             item.target = self
             item.action = #selector(showReclaim)
@@ -1816,19 +1758,16 @@ extension CadastreWindow: NSToolbarDelegate {
         // what the map is currently showing. Captions cost the width that
         // pushed two of them into the overflow menu.
         case .baseline:
-            item.label = tr(en: "Compare to", fr: "Comparer à")
-            item.toolTip = tr(en: "Compare to a marker placed earlier on this folder",
-                              fr: "Comparer à un repère posé plus tôt sur ce dossier")
+            item.label = tr("Compare to")
+            item.toolTip = tr("Compare to a marker placed earlier on this folder")
             item.view = baselinePicker
         case .metric:
-            item.label = tr(en: "Area", fr: "Surface")
-            item.toolTip = tr(en: "What the area of each rectangle measures (⌘1–5)",
-                              fr: "Ce que mesure la surface de chaque rectangle (⌘1–5)")
+            item.label = tr("Area")
+            item.toolTip = tr("What the area of each rectangle measures (⌘1–5)")
             item.view = metricPicker
         case .colour:
-            item.label = tr(en: "Colour", fr: "Couleur")
-            item.toolTip = tr(en: "What the colour of each rectangle means (⌥⌘1–5)",
-                              fr: "Ce que signifie la couleur de chaque rectangle (⌥⌘1–5)")
+            item.label = tr("Colour")
+            item.toolTip = tr("What the colour of each rectangle means (⌥⌘1–5)")
             item.view = colorPicker
         default:
             return nil

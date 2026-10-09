@@ -37,29 +37,28 @@ final class LegendView: NSView {
             return Palette.Family.allCases.map { ($0.label, Palette.family($0, palette)) }
         case .depth:
             return (0..<5).map { level in
-                (level == 0 ? tr(en: "shallow", fr: "surface") : level == 4 ? tr(en: "deep", fr: "profond") : "",
+                (level == 0 ? tr("shallow") : level == 4 ? tr("deep") : "",
                  Palette.depth(level, palette))
             }
         case .sharing:
-            return [(tr(en: "exclusive", fr: "exclusif"), Palette.sharing(0, palette)),
+            return [(tr("exclusive"), Palette.sharing(0, palette)),
                     ("", Palette.sharing(0.5, palette)),
-                    (tr(en: "fully shared", fr: "entièrement partagé"), Palette.sharing(1, palette))]
+                    (tr("fully shared"), Palette.sharing(1, palette))]
         case .delta:
             guard hasBaseline else {
-                return [(tr(en: "no marker loaded — place one (⌘S), then choose it under “compare to”",
-                            fr: "aucun repère chargé — en poser un (⌘S), puis le choisir dans « comparer à »"),
+                return [(tr("no marker loaded — place one (⌘S), then choose it under “compare to”"),
                          Palette.mutedInk)]
             }
             // Named for what is measured — bytes written — so the map cannot
             // be read as "this folder shrank" when its share merely moved.
-            return [(tr(en: "content deleted", fr: "contenu supprimé"), Palette.delta(-1, palette)),
-                    (tr(en: "nothing written", fr: "rien d'écrit"), Palette.delta(0, palette)),
-                    (tr(en: "content written", fr: "contenu écrit"), Palette.delta(1, palette))]
+            return [(tr("content deleted"), Palette.delta(-1, palette)),
+                    (tr("nothing written"), Palette.delta(0, palette)),
+                    (tr("content written"), Palette.delta(1, palette))]
         case .reclaim:
             return [(Reclaim.Confidence.regenerable.title, Palette.statusGood),
                     (Reclaim.Confidence.cache.title, Palette.statusSerious),
                     (Reclaim.Confidence.review.title, Palette.statusWarning),
-                    (tr(en: "keep", fr: "à garder"), Palette.keepNeutral(palette))]
+                    (tr("keep"), Palette.keepNeutral(palette))]
         }
     }
 

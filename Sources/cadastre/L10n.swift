@@ -30,6 +30,8 @@ enum Language: String, CaseIterable {
 }
 
 enum L10n {
+    /// Settled once at launch (`--lang` may override it before anything is
+    /// printed); the tests switch it, never concurrently.
     nonisolated(unsafe) static var language: Language = detect()
 
     static func detect() -> Language {

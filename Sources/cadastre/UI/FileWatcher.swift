@@ -10,12 +10,15 @@ import CoreServices
 /// would slowly drift from the disk. The trigger is incremental; the measure
 /// is redone, in the background, and the previous measure becomes the marker
 /// so the map colours exactly what just moved.
-final class FileWatcher {
+///
+/// `@unchecked Sendable`: the FSEvents callback only hops to the main queue,
+/// where `onChange` runs and where the window starts and stops the stream.
+final class FileWatcher: @unchecked Sendable {
     private var stream: FSEventStreamRef?
     private let queue = DispatchQueue(label: "cadastre.watcher", qos: .utility)
-    private let onChange: () -> Void
+    private let onChange: @MainActor () -> Void
 
-    init(path: String, latency: TimeInterval = 2, onChange: @escaping () -> Void) {
+    init(path: String, latency: TimeInterval = 2, onChange: @escaping @MainActor () -> Void) {
         self.onChange = onChange
         var context = FSEventStreamContext(version: 0,
                                            info: Unmanaged.passUnretained(self).toOpaque(),

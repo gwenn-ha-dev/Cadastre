@@ -36,7 +36,10 @@ struct ScanResult {
 /// One syscall returns the name *and* every size attribute for a few hundred
 /// entries at once. The readdir-then-lstat-each-child shape that older disk
 /// tools use costs one syscall per file and is the reason they take minutes.
-final class Walker {
+///
+/// `@unchecked Sendable`: the worker threads share the mutable state below,
+/// and every access to it goes through `gate`.
+final class Walker: @unchecked Sendable {
     struct Options {
         var threads: Int = max(2, min(8, ProcessInfo.processInfo.activeProcessorCount))
         var crossMounts = false

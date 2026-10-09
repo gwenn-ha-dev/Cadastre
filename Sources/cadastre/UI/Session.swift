@@ -87,7 +87,7 @@ final class Session {
 
 /// A scan in flight. Cancelling keeps what was measured and delivers it as
 /// partial; the window never pretends a stopped scan is a whole one.
-final class ScanTask {
+final class ScanTask: Sendable {
     fileprivate let walker: Walker
     fileprivate init(walker: Walker) { self.walker = walker }
     func cancel() { walker.cancel() }
@@ -97,8 +97,8 @@ final class ScanTask {
 enum ScanJob {
     @discardableResult
     static func run(path: String,
-                    progress: @escaping (Int, Int) -> Void,
-                    completion: @escaping (ScanResult, [Reclaim.Candidate], Date) -> Void) -> ScanTask {
+                    progress: @escaping @MainActor (Int, Int) -> Void,
+                    completion: @escaping @MainActor (ScanTask, ScanResult, [Reclaim.Candidate], Date) -> Void) -> ScanTask {
         var options = Walker.Options()
         options.keepFiles = true
         var lastTick = Date.distantPast
@@ -116,7 +116,7 @@ enum ScanJob {
             let started = Date()
             let result = walker.scan(root: path)
             let candidates = Reclaim.find(in: result).candidates
-            DispatchQueue.main.async { completion(result, candidates, started) }
+            DispatchQueue.main.async { completion(task, result, candidates, started) }
         }
         return task
     }
@@ -200,6 +200,7 @@ enum RecentFolders {
 }
 
 /// Ask for a folder. Returns nil if the person changes their mind.
+@MainActor
 func chooseFolder(startingAt current: String?) -> String? {
     let panel = NSOpenPanel()
     panel.canChooseFiles = false

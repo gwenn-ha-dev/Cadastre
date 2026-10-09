@@ -46,6 +46,7 @@ extension Reclaim.Confidence {
 /// give back; until now the window could only tint it. The figure at the
 /// bottom is the *combined* one — these folders share blocks with each other,
 /// so ticking a second box can free more than that box is worth on its own.
+@MainActor
 final class ReclaimSheet: NSObject, NSTableViewDataSource, NSTableViewDelegate {
     private let session: Session
     private let candidates: [Reclaim.Candidate]

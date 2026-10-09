@@ -1,7 +1,8 @@
 import Foundation
 
 enum Style {
-    static var enabled = isatty(STDOUT_FILENO) == 1
+    /// Set once, while the arguments are parsed, before any thread starts.
+    nonisolated(unsafe) static var enabled = isatty(STDOUT_FILENO) == 1
 
     static func dim(_ s: String) -> String { enabled ? "\u{1B}[2m\(s)\u{1B}[0m" : s }
     static func bold(_ s: String) -> String { enabled ? "\u{1B}[1m\(s)\u{1B}[0m" : s }

@@ -247,6 +247,7 @@ private final class EmptyStateView: NSView {
 ///
 /// The rest is the loop the tool is actually used in: open a folder, drop a
 /// marker, come back next week and compare against it.
+@MainActor
 final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate, NSWindowDelegate,
                             NSMenuItemValidation, NSMenuDelegate, NSSearchFieldDelegate {
     private var session: Session?
@@ -746,12 +747,11 @@ final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate
         pendingBaseline = nil
         pendingBaselinePath = nil
         pendingPreviousMeasure = nil
-        var task: ScanTask? = nil
-        task = ScanJob.run(path: path) { [weak self] done, queued in
+        let task = ScanJob.run(path: path) { [weak self] done, queued in
             guard !quiet else { return }
             self?.progressText?.stringValue = tr("%@ folders, %@ queued…",
                                                  L10n.count(done), L10n.count(queued))
-        } completion: { [weak self] result, reclaim, startedAt in
+        } completion: { [weak self] task, result, reclaim, startedAt in
             guard let self, self.scanTask === task else { return }   // superseded by a newer scan
             self.scanTask = nil
             self.overlay.isHidden = true
@@ -1780,6 +1780,7 @@ extension CadastreWindow: NSToolbarDelegate {
 
 /// Dock drops and "Open With" arrive here; everything else goes through the
 /// window. The bundle declares folders as an openable type for that reason.
+@MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     var controller: CadastreWindow
     init(controller: CadastreWindow) { self.controller = controller }
@@ -1797,6 +1798,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 ///
 /// The scan happens inside the app now, so this can start with nothing: opened
 /// from the Finder with no argument, it shows the picker.
+@MainActor
 func runTreemapInterface(initialPath: String?, metric: Metric, baseline: Snapshot?,
                          colorMode: ColorMode = .kind, find: String? = nil, openReclaim: Bool = false,
                          openChanges: Bool = false, wholeDisk: Bool = false) -> Never {

@@ -7,6 +7,7 @@ import AppKit
 /// list sorted by size of change, with the folders that moved bytes themselves
 /// first. This is the same `ScanDiff` the command line prints, laid out as a
 /// table whose rows lead back to the map.
+@MainActor
 final class DiffSheet: NSObject, NSTableViewDataSource, NSTableViewDelegate {
     private enum Row {
         case header(String)

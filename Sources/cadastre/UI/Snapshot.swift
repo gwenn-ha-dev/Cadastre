@@ -7,6 +7,7 @@ import Metal
 /// on paper says nothing about whether the picture reads — and kept because
 /// exporting a map is worth having on its own, and because it turns the
 /// renderer into something a script can check rather than only an eye.
+@MainActor
 enum TreemapSnapshot {
     enum Failure: Error, CustomStringConvertible {
         case noRenderer, noTexture, encodingFailed

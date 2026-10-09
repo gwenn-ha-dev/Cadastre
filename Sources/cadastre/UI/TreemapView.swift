@@ -55,8 +55,10 @@ private final class TileElement: NSAccessibilityElement {
     weak var view: TreemapView?
 
     override func accessibilityPerformPress() -> Bool {
+        let node = self.node
         guard let view else { return false }
-        view.activate(node: node)
+        // Accessibility actions arrive on the main thread.
+        MainActor.assumeIsolated { view.activate(node: node) }
         return true
     }
 }
@@ -392,13 +394,17 @@ final class TreemapView: NSView {
     override func acceptsPreviewPanelControl(_ panel: QLPreviewPanel!) -> Bool { true }
 
     override func beginPreviewPanelControl(_ panel: QLPreviewPanel!) {
-        panel.dataSource = self
-        panel.delegate = self
+        MainActor.assumeIsolated {
+            panel.dataSource = self
+            panel.delegate = self
+        }
     }
 
     override func endPreviewPanelControl(_ panel: QLPreviewPanel!) {
-        panel.dataSource = nil
-        panel.delegate = nil
+        MainActor.assumeIsolated {
+            panel.dataSource = nil
+            panel.delegate = nil
+        }
     }
 
     private func select(index: Int) {
@@ -498,7 +504,8 @@ final class TreemapView: NSView {
         selectedIndex = -1
         timer?.invalidate()
         timer = Timer.scheduledTimer(withTimeInterval: 1.0 / 120, repeats: true) { [weak self] _ in
-            self?.step()
+            // Scheduled on the main run loop, so it fires there.
+            MainActor.assumeIsolated { self?.step() }
         }
         RunLoop.current.add(timer!, forMode: .eventTracking)
     }
@@ -527,7 +534,7 @@ final class TreemapView: NSView {
     }
 }
 
-extension TreemapView: QLPreviewPanelDataSource, QLPreviewPanelDelegate {
+extension TreemapView: @preconcurrency QLPreviewPanelDataSource, @preconcurrency QLPreviewPanelDelegate {
     func numberOfPreviewItems(in panel: QLPreviewPanel!) -> Int {
         selectedNode.flatMap { previewURL?($0) } == nil ? 0 : 1
     }

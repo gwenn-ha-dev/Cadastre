@@ -127,7 +127,7 @@ if let position = arguments.firstIndex(of: "--lang"), position + 1 < arguments.c
 }
 
 var index = 0
-func nextValue(_ flag: String) -> String {
+@MainActor func nextValue(_ flag: String) -> String {
     index += 1
     guard index < arguments.count else {
         usageError(tr("%@ expects a value", flag))
@@ -388,7 +388,7 @@ if let jsonPath {
 
 /// Flat-ish JSON of the directory tree, one object per node, all five metrics
 /// kept. This is the feed a treemap renderer consumes.
-func exportJSON(_ result: ScanResult, to file: String) throws {
+@MainActor func exportJSON(_ result: ScanResult, to file: String) throws {
     let tree = result.tree
     var out = Data()
     out.reserveCapacity(tree.count * 160)

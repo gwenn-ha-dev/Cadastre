@@ -10,7 +10,8 @@ compression. It reads the local filesystem only — no network, no data
 collected.
 
 Platform: macOS 14+ (`LSMinimumSystemVersion`, and `minos 14.0` in the binary).
-Build system: SwiftPM, bundle assembled by `outils/package.sh`. Bundle ID
+Build system: SwiftPM, Swift 6 language mode (strict concurrency), bundle
+assembled by `outils/package.sh`. Bundle ID
 `dev.gwennha.Cadastre`. Binary `cadastre`.
 
 ## Build and test
@@ -60,6 +61,11 @@ through the `Makefile`. It is the same interface in every project here.
 - **The bundle comes from `Resources/`**: `Info.plist` (the version lives
   there), `AppIcon.icns`, every `.lproj`. `outils/package.sh` copies, it does
   not generate.
+- **Concurrency**: the UI types are `@MainActor`; `Walker` and `FileWatcher`
+  are `@unchecked Sendable` because a lock (`gate`) or the main queue guards
+  their state — keep it that way when touching them. AppKit callbacks that
+  are not annotated (Quick Look panel, accessibility press, timers) enter the
+  main actor with `MainActor.assumeIsolated`.
 - Identifiers, commit messages and both READMEs are in **English**; comments may
   be in English or French (charter §2).
 

@@ -14,11 +14,11 @@ let package = Package(
             dependencies: ["CadastreC"],
             swiftSettings: [.swiftLanguageMode(.v5), .unsafeFlags(["-Ounchecked"], .when(configuration: .release))]
         ),
-        // The accounting on synthetic trees. Scripts/verify.sh checks the same
+        // The accounting on synthetic trees. outils/verify.sh checks the same
         // rules against real APFS files; these check the corners a real disk
         // rarely produces on demand.
         .testTarget(
-            name: "cadastreTests",
+            name: "CadastreTests",
             dependencies: ["cadastre"],
             swiftSettings: [.swiftLanguageMode(.v5)]
         ),

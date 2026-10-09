@@ -1,0 +1,6 @@
+/* Permission prompts and the Finder's document kind (charter §6). */
+"NSDesktopFolderUsageDescription" = "To measure the space taken by the Desktop.";
+"NSDocumentsFolderUsageDescription" = "To measure the space taken by your documents.";
+"NSDownloadsFolderUsageDescription" = "To measure the space taken by your downloads.";
+"NSRemovableVolumesUsageDescription" = "To measure the space taken on an external volume.";
+"Folder" = "Folder";

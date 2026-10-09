@@ -191,11 +191,6 @@ while index < arguments.count {
     case "--history": showHistory = true
     case "--clean": showClean = true
     case "--self-test-layout": selfTestLayout = true
-    case "--make-iconset":
-        // Used by Scripts/bundle.sh; not worth a line in the help.
-        let directory = nextValue(argument)
-        do { try AppIcon.writeIconset(to: directory) } catch { fail("\(error)") }
-        exit(0)
     case "--ui": launchUI = true
     case "--find": findText = nextValue(argument)
     case "--open":

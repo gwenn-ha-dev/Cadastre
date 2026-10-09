@@ -1,4 +1,37 @@
-.build/
-Cadastre.app/
-.DS_Store
+# Build artefacts
+build/
 dist/
+.build/
+DerivedData/
+*.app
+*.dSYM
+*.o
+*.xcarchive
+
+# Xcode
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+.swiftpm/
+
+# Generated intermediates (the .icns itself IS versioned)
+Resources/AppIcon.iconset/
+
+# Downloaded models and datasets
+Models/
+*.safetensors
+*.ckpt
+*.mlmodelc
+
+# macOS
+.DS_Store
+._*
+
+# Editors
+.vscode/
+.idea/
+
+# Secrets
+.env
+*.p12
+*.mobileprovision

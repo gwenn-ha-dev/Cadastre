@@ -145,7 +145,9 @@ private final class EmptyStateView: NSView {
 
     override init(frame: NSRect) {
         super.init(frame: frame)
-        let icon = NSImageView(image: AppIcon.image(size: 112))
+        // The bundle's icon (Resources/AppIcon.icns, charter §7). Run from a
+        // terminal there is no bundle, and AppKit hands back the generic one.
+        let icon = NSImageView(image: NSImage(named: NSImage.applicationIconName) ?? NSImage())
         icon.imageScaling = .scaleProportionallyUpOrDown
         icon.translatesAutoresizingMaskIntoConstraints = false
         icon.widthAnchor.constraint(equalToConstant: 96).isActive = true

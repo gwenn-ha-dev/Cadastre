@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleName</key>
+	<string>Cadastre</string>
+	<key>CFBundleDisplayName</key>
+	<string>Cadastre</string>
+	<key>CFBundleIdentifier</key>
+	<string>dev.gwennha.Cadastre</string>
+	<key>CFBundleExecutable</key>
+	<string>cadastre</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>0.2.0</string>
+	<key>CFBundleVersion</key>
+	<string>2</string>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string>
+		<string>fr</string>
+	</array>
+	<key>LSMinimumSystemVersion</key>
+	<string>14.0</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.utilities</string>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>NSHumanReadableCopyright</key>
+	<string>© 2026 gwenn-ha-dev</string>
+	<!-- Folders can be dropped on the Dock icon and opened with "Open With". -->
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Folder</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>LSHandlerRank</key>
+			<string>None</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>public.folder</string>
+			</array>
+		</dict>
+	</array>
+	<!-- Shown in the permission prompts. Without them macOS asks with no reason
+	     given, or refuses outright. Translated in <lang>.lproj/InfoPlist.strings;
+	     the value here is the English one, read by any other system language. -->
+	<key>NSDesktopFolderUsageDescription</key>
+	<string>To measure the space taken by the Desktop.</string>
+	<key>NSDocumentsFolderUsageDescription</key>
+	<string>To measure the space taken by your documents.</string>
+	<key>NSDownloadsFolderUsageDescription</key>
+	<string>To measure the space taken by your downloads.</string>
+	<key>NSRemovableVolumesUsageDescription</key>
+	<string>To measure the space taken on an external volume.</string>
+</dict>
+</plist>

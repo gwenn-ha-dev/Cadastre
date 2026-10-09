@@ -1,0 +1,6 @@
+/* Alertes d'autorisation et type de document dans le Finder (charte §6). */
+"NSDesktopFolderUsageDescription" = "Pour mesurer l'espace occupé par le bureau.";
+"NSDocumentsFolderUsageDescription" = "Pour mesurer l'espace occupé par les documents.";
+"NSDownloadsFolderUsageDescription" = "Pour mesurer l'espace occupé par les téléchargements.";
+"NSRemovableVolumesUsageDescription" = "Pour mesurer l'espace occupé sur un volume externe.";
+"Folder" = "Dossier";

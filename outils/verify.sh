@@ -242,9 +242,9 @@ echo "un chemin relatif devient absolu"
 check "le nom de la racine est absolu" "$(python3 -c "import json;print(1 if json.load(open('$WORK/rel.json'))['root']['name'].startswith('/') else 0)")" 1 0
 
 echo "l'application s'empaquette"
-./Scripts/bundle.sh "$WORK/Cadastre.app" >/dev/null 2>&1
+./outils/package.sh "$WORK/Cadastre.app" >/dev/null 2>&1
 check "exécutable en place" "$([ -x "$WORK/Cadastre.app/Contents/MacOS/cadastre" ] && echo 1 || echo 0)" 1 0
-check "icône en place"      "$([ -s "$WORK/Cadastre.app/Contents/Resources/Cadastre.icns" ] && echo 1 || echo 0)" 1 0
+check "icône en place"      "$([ -s "$WORK/Cadastre.app/Contents/Resources/AppIcon.icns" ] && echo 1 || echo 0)" 1 0
 check "Info.plist valide"   "$(plutil -lint "$WORK/Cadastre.app/Contents/Info.plist" >/dev/null 2>&1 && echo 1 || echo 0)" 1 0
 # Le même binaire doit rester utilisable en ligne de commande depuis le bundle.
 check "le binaire du bundle reste un CLI" \

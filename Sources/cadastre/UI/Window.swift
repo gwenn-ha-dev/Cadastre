@@ -690,9 +690,9 @@ final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate
         overlay.isHidden = false
         spinner.startAnimation(nil)
         progressText?.stringValue = tr(en: "reading the volumes…", fr: "lecture des volumes…")
-        DispatchQueue.global(qos: .userInitiated).async {
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             let context = WholeDisk.gather()
-            DispatchQueue.main.async { [weak self] in
+            DispatchQueue.main.async {
                 guard let self else { return }
                 if !context.hasFullDiskAccess {
                     let alert = NSAlert()

@@ -308,9 +308,12 @@ final class CadastreWindow: NSObject, NSTableViewDataSource, NSTableViewDelegate
     var openChangesOnFirstScan = false
     var initialSearch: String?
 
-    init(metric: Metric, baseline: Snapshot?) {
+    init(metric: Metric, baseline: Snapshot?, baselinePath: String? = nil) {
         self.defaultMetric = metric
         self.pendingBaseline = baseline
+        // Without its path, the marker loaded by `--since` matched no history
+        // entry and the toolbar said "no marker" over a delta map.
+        self.pendingBaselinePath = baseline == nil ? nil : baselinePath
         window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1360, height: 860),
                           styleMask: [.titled, .closable, .miniaturizable, .resizable],
                           backing: .buffered, defer: false)
@@ -1799,13 +1802,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 /// The scan happens inside the app now, so this can start with nothing: opened
 /// from the Finder with no argument, it shows the picker.
 @MainActor
-func runTreemapInterface(initialPath: String?, metric: Metric, baseline: Snapshot?,
+func runTreemapInterface(initialPath: String?, metric: Metric, baseline: Snapshot?, baselinePath: String? = nil,
                          colorMode: ColorMode = .kind, find: String? = nil, openReclaim: Bool = false,
                          openChanges: Bool = false, wholeDisk: Bool = false) -> Never {
     let app = NSApplication.shared
     app.setActivationPolicy(.regular)
 
-    let controller = CadastreWindow(metric: metric, baseline: baseline)
+    let controller = CadastreWindow(metric: metric, baseline: baseline, baselinePath: baselinePath)
     controller.select(colorMode: baseline != nil && colorMode == .kind ? .delta : colorMode)
     controller.initialSearch = find
     controller.openReclaimOnFirstScan = openReclaim

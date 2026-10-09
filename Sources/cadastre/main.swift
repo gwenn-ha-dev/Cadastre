@@ -227,6 +227,7 @@ if let diffPair {
 if launchUI {
     let start = path.map { URL(fileURLWithPath: ($0 as NSString).expandingTildeInPath).standardizedFileURL.path }
     var startBaseline: Snapshot? = nil
+    var startBaselinePath: String? = nil
     if let sincePath {
         var resolved: String? = sincePath
         if sincePath == "last" {
@@ -235,9 +236,11 @@ if launchUI {
         if let resolved {
             do { startBaseline = Snapshot(try ScanIndex.read(resolved)) }
             catch { fail("\(error)") }
+            startBaselinePath = resolved
         }
     }
     runTreemapInterface(initialPath: wholeDisk ? nil : start, metric: metric, baseline: startBaseline,
+                        baselinePath: startBaselinePath,
                         colorMode: colorMode, find: findText,
                         openReclaim: showClean || openPanel == "reclaim", openChanges: openPanel == "changes",
                         wholeDisk: wholeDisk)

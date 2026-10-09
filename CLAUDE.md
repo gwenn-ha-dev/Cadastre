@@ -69,6 +69,29 @@ through the `Makefile`. It is the same interface in every project here.
 - Identifiers, commit messages and both READMEs are in **English**; comments may
   be in English or French (charter §2).
 
+## Public identity and releases (charter §12)
+
+- Commit as `gwenn-ha-dev <13298867+gwenn-ha-dev@users.noreply.github.com>` (set
+  in this repo's git config) and in UTC: `TZ=UTC git commit …`. No personal name,
+  email or `/Users/…` path in tracked files. `../../Charte/outils/identite.sh .` checks.
+- A release: `make package && make sign && make dmg && make shots && make release-check`,
+  then tag `v<version>` and attach `build/Cadastre-<version>.dmg` — see
+  `../../Charte/DISTRIBUTION-AGENT.md`, phase 3. The version is
+  `CFBundleShortVersionString` in `Resources/Info.plist`, with a matching
+  `## [x.y.z]` section in `CHANGELOG.md`.
+- Signing: `outils/package.sh` signs ad hoc, without `--deep` and without
+  entitlements — the app needs none beyond the hardened runtime, which
+  `make sign` adds with the Developer ID. Nothing is nested in the bundle (the
+  string catalogue is compiled into the binary), so there is one piece to sign.
+  The hardened runtime does not stop the Metal shader from compiling at launch.
+- **Captures never show a real disk.** `make shots` runs `outils/captures.sh`,
+  which builds an invented folder with `outils/demo.sh` in `/tmp/cadastre-demo`
+  and points the app at it, with `CADASTRE_HOME` there too so the marker
+  history stays out of the user's. Never capture `~`, `--disk` or the empty
+  state (it lists recent folders). The app is launched by its binary, not
+  `open`, so that the environment reaches it; `-AppleLanguages`/`-AppleLocale`
+  are filtered out of the options by `main.swift`.
+
 ## Layout
 
 ```

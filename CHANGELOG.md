@@ -6,7 +6,23 @@ Versioning: [SemVer](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-10-09
+
+First public release.
+
+### Added
+- Signed with a Developer ID and notarized: the `.dmg` opens with a double
+  click on any Mac running macOS 14 or later.
+- README captures taken from an invented folder (`outils/demo.sh`), never a
+  real disk, in English and in French.
+
 ### Changed
+- Every visible string lives in one catalogue,
+  `Resources/Localizable.xcstrings` (English and French), embedded in the
+  binary so the command line stays bilingual.
+- The language follows the system; the in-app Language menu is gone.
+  `--lang` and `CADASTRE_LANG` remain for the command line.
+- Built in the Swift 6 language mode, with strict concurrency checking.
 - Bundle identifier is now `dev.gwennha.Cadastre` (was `local.cadastre`).
   macOS treats it as a new app: Full Disk Access and the folder permissions
   have to be granted again, and the recent folders start empty. Markers are
@@ -32,4 +48,5 @@ Never published; recorded for history.
 - French and English throughout, units and dates included.
 - Wider reclaim catalogue; nine unit tests.
 
-[Unreleased]: https://github.com/gwenn-ha-dev/Cadastre/commits/main
+[Unreleased]: https://github.com/gwenn-ha-dev/Cadastre/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/gwenn-ha-dev/Cadastre/releases/tag/v0.3.0

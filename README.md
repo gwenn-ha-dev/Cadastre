@@ -1,20 +1,77 @@
 # Cadastre
 
-*[Version française](README.fr.md)*
+[![CI](https://github.com/gwenn-ha-dev/Cadastre/actions/workflows/ci.yml/badge.svg)](https://github.com/gwenn-ha-dev/Cadastre/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+![Platform](https://img.shields.io/badge/Platform-macOS%2014%2B-black?logo=apple)
+![Swift 6](https://img.shields.io/badge/Swift-6-orange?logo=swift)
 
-Disk usage measurement for macOS, built around one idea: on APFS,
-"how big is it" and "what do I get back if I delete it"
-are two different questions, with two different answers.
+*🇬🇧 English · 🇫🇷 [Français](./README.fr.md)*
 
-An app with a map, and the same binary as a command-line tool. Both
-speak French and English, depending on the system language.
+Disk usage on macOS that tells apart "how big is it" from "what do I get back
+if I delete it" — on APFS, two different questions with two different answers.
+An app with a map, and the same binary as a command-line tool.
 
-## Getting started
+![Cadastre measuring a 2.35 GB "Projects" folder: a treemap coloured by file type — a Python virtual environment and CSV data on the left, a Rust build output in grey, two videos in purple, FLAC audio, photos and web dependencies — and an inspector listing the eight top-level folders, from ml-notebook at 529 MB down to documents at 20 MB](docs/img/map.png)
 
+## Features
+
+- **Five measures for every entry**: logical size, allocated blocks, real
+  footprint (a fair share of shared blocks), what deleting this entry alone
+  frees, and what deleting the whole subtree frees. APFS clones, hard links,
+  sparse files and compression are accounted for, so the totals add up.
+- **A treemap rendered in Metal**, one rectangle per file, animated zoom,
+  coloured by file type, depth, shared blocks, what changed, or reclaimability.
+- **Safe to delete**: a catalogue that only offers a folder with proof that a
+  tool can rebuild it — a `package.json` beside `node_modules`, a `Cargo.toml`
+  beside `target` — and computes the gain of the whole selection. Everything
+  goes to the Trash, and `⌘Z` puts it back.
+- **What changed**: drop a marker, come back later, and see where the bytes
+  went — telling bytes actually written from accounting that merely shifted
+  when a file was cloned.
+- **The whole disk**: the Data volume framed by the container's other volumes,
+  so the map adds up to the disk's used space.
+- **Honest about what it cannot see**: evicted iCloud files are never
+  downloaded, folders denied by privacy settings are counted and listed, and
+  an incomplete total is shown as a floor.
+- English and French, following the system language.
+- Reads file metadata on this Mac only: no network access, nothing collected.
+
+| By shared blocks | Reclaim space |
+|---|---|
+| ![The same folder coloured by shared blocks: almost everything dark blue, exclusive; the drone video, its clone in backups, and the stations.csv file and its clone in pale blue, fully shared](docs/img/shared.png) | ![The Reclaim space panel over the map: node_modules 406 MB, target 350 MB and .venv 345 MB, each marked regenerable with the command that rebuilds it, 1.10 GB selected, and a Move to Trash button](docs/img/reclaim.png) |
+
+The pale tiles are clones: deleting the video in `backups` frees nothing as
+long as the original stays, which is what *By shared blocks* is for.
+
+![The What changed panel after a simulated week: from 2.35 GB to 2.60 GB, +245 MB; the Rust build grew by 147 MB, website/dist is new at 113 MB, and videos lost 136 MB with "nothing written — cloned elsewhere", the harbour time-lapse having been cloned into backups](docs/img/changes.png)
+
+## Install
+
+Download **`Cadastre-<version>.dmg`** from the
+[latest release](https://github.com/gwenn-ha-dev/Cadastre/releases/latest),
+open it and drag Cadastre onto Applications. The app is signed with a Developer
+ID and notarized by Apple: it opens with a double click. It needs macOS 14 or
+later.
+
+To measure the whole disk, grant it Full Disk Access (System Settings › Privacy
+& Security › Full Disk Access); without it, Mail, Messages, Safari and the iOS
+backups read as empty, and Cadastre says so.
+
+The command-line tool is the app's own binary. To have it on your `PATH`:
+
+```sh
+ln -s /Applications/Cadastre.app/Contents/MacOS/cadastre /usr/local/bin/cadastre
 ```
-./Scripts/bundle.sh        # produces Cadastre.app
-open Cadastre.app
+
+To build from source instead:
+
+```sh
+git clone https://github.com/gwenn-ha-dev/Cadastre.git
+cd Cadastre
+make package      # build/Cadastre.app
 ```
+
+## Usage
 
 Double-click: it suggests a folder — or one of the last ones measured —,
 measures it, and displays the map. A folder dropped onto the window or onto
@@ -39,9 +96,6 @@ the Dock icon is measured too.
 | `⌥⌘I` | hide the inspector |
 | `⌘.` | stop a scan in progress — the map is shown as is, marked partial |
 
-The Cadastre › Language menu forces French or English, independent of the
-system, without relaunching: the window is rebuilt and the folder measured again.
-
 `⌘Z` puts back what just went to the Trash — one entry from the context menu
 as well as a whole selection from the "reclaim" panel — and measures again.
 Under VoiceOver, the map exposes its first two levels as buttons named by
@@ -52,12 +106,9 @@ this folder. After a deletion, the map is **re-measured**, never patched:
 every figure shown is a claim about the disk, and a claim that's stale after
 a deletion is exactly the lie this program exists to avoid.
 
-The bundle's binary is the same one as the terminal —
-`Cadastre.app/Contents/MacOS/cadastre ~/Code --clean` works.
+On the command line:
 
 ```
-swift build -c release
-
 cadastre ~/Library --depth 2        # measure (Ctrl-C interrupts and shows the measured floor)
 cadastre --disk                     # the whole Data volume, where everything deletable lives
 cadastre --volumes                  # volume status only, no scan
@@ -76,10 +127,14 @@ cadastre ~ --ui --find node_modules # ... with a search already typed in
 cadastre ~ --ui --open reclaim      # ... opened on the "reclaim" panel
 cadastre ~ --ui --since last --open changes   # ... or on "what changed"
 cadastre --ui --disk                # this Mac: the map of the whole disk
-cadastre ~ --snapshot carte.png     # PNG export, without opening a window
+cadastre ~ --snapshot map.png       # PNG export, without opening a window
 ```
 
-## The five metrics
+`cadastre --help` lists every option.
+
+## How it works
+
+### The five metrics
 
 The names on the left are the command-line ones; the app spells them out in
 full.
@@ -98,7 +153,7 @@ deleting.
 The gap between `allocated` and `attributed` is the amount that `du`,
 GrandPerspective and Disk Inventory X double-count.
 
-### Why `retained` ≠ sum of `exclusive`
+#### Why `retained` ≠ sum of `exclusive`
 
 Two clones of the same file in two different folders: each has
 `exclusive = 0`, deleting one frees nothing. Deleting both frees everything.
@@ -112,7 +167,7 @@ $ cadastre split/projetA        reclaimable:      0 B
 $ cadastre split                reclaimable: 33.6 MB
 ```
 
-## macOS pitfalls, and what's done about each one
+### macOS pitfalls, and what's done about each one
 
 | Pitfall | Handling |
 |---|---|
@@ -129,7 +184,7 @@ $ cadastre split                reclaimable: 33.6 MB
 | **Full Disk Access** | Probed at startup. Without it, Mail, Messages, Safari and iOS backups read as empty; Cadastre says so instead of showing a clean folder. |
 | **Denied folders** | Counted and listed. An incomplete total is reported as a floor. |
 
-## The map
+### The map
 
 Squarified treemap, rendered in Metal: one entry per file, animated zoom, the
 five metrics switchable on the fly — it's the same map that answers "what's
@@ -151,7 +206,7 @@ Five ways to colour:
 *By shared blocks* is the view unique to Cadastre: the darkest squares are
 cloned blocks, which you won't reclaim by deleting what you see.
 
-### Six families, and how they were chosen
+#### Six families, and how they were chosen
 
 A treemap is an **"all-pairs"** shape: any two rectangles can touch, so
 *every* pair of colours has to stay distinguishable, not just neighbours in a
@@ -200,7 +255,7 @@ threshold is bound to get one of them wrong. Below 3:1, a one-pixel halo of
 the opposite ink recovers legibility — removing the label isn't an option,
 it's the palette's secondary encoding.
 
-### Checking the geometry
+#### Checking the geometry
 
 A layout bug doesn't crash: it draws something plausible that lies about
 proportions, exactly the flaw this program exists to avoid.
@@ -210,7 +265,7 @@ and that each one's area matches its share of the value. On a personal
 folder: 40,000 rectangles, proportion error 0.0000, median width/height
 ratio 1.12.
 
-## What changed
+### What changed
 
 The question you actually ask is almost never "what's big" — you already
 know that. It's "what ate forty gigabytes this week". A static treemap is a
@@ -234,7 +289,7 @@ Trees are matched by name, level by level — no path is built for the
 matching, the comparison is linear. Two trees of 262,000 nodes are compared
 in 68 ms, process start-up included.
 
-### "nothing written"
+#### "nothing written"
 
 Cloning a file into another folder halves the share credited to the
 original. A folder nobody touched can therefore *shrink*. The diff measures
@@ -244,7 +299,7 @@ shifted. Without that, the report is accurate and misleading. The map in
 **By what changed** mode colours the bytes written, not the displayed
 metric, for the same reason.
 
-### In the window
+#### In the window
 
 `⌘D` opens the same change as a table: before, after, delta, then "where it
 moved" — the folders that themselves wrote or lost bytes — and the files that
@@ -254,7 +309,7 @@ changed", the current level's list in the inspector shows bytes written
 rather than size, sorted by change: the "what ate forty gigabytes" reading
 without leaving the window.
 
-### Following changes
+#### Following changes
 
 `⌘⇧L` puts an FSEvents watcher on the folder. Every write triggers a
 background measure — no overlay, just a "measuring again…" in the footer —
@@ -268,7 +323,7 @@ cheaper than that drift. Events are coalesced: a build writes thousands of
 files over a few seconds, and one measure at the end is worth more than ten
 in the middle; a slow folder is re-measured only after a few scan durations.
 
-### Markers
+#### Markers
 
 `⌘S` in the app, `--save auto` on the command line: the folder's state is
 written to the local history. Later, the "compare to" menu offers the
@@ -282,7 +337,7 @@ would offer itself its own marker as a point of comparison.
 `CADASTRE_HOME` moves the history somewhere other than
 `~/Library/Application Support/Cadastre`.
 
-### The index
+#### The index
 
 A saved scan is a flat binary file: header, fixed-width records, a names
 arena. JSON was tempting and it's the wrong shape — a few million nodes cost
@@ -292,7 +347,7 @@ drifting.
 
 220,000 files and 42,000 folders fit in 22 MB, read back in 68 ms.
 
-## The whole disk
+### The whole disk
 
 `⌘⇧O` in the app, `--disk` on the command line. This is not a scan of `/`:
 since Catalina, `/` is the sealed system volume, and `/Users`, `/Applications`
@@ -313,7 +368,7 @@ Access the app says so before measuring, with the button that opens the right
 setting — 207 refused folders on an ordinary Mac, and a total announced as a
 floor.
 
-## Safe to delete
+### Safe to delete
 
 The principle behind this catalogue is that **a name is never enough**.
 `build` is a compiler's output in one project and ten years of work in
@@ -340,7 +395,7 @@ before deletion, because a scan is a snapshot and the disk keeps moving:
 - deletion goes to the **Trash**, never `unlink`: these rules are
   heuristics, and a heuristic needs an undo
 
-### The gain isn't the sum of its parts
+#### The gain isn't the sum of its parts
 
 pnpm hard-links every project's dependencies to a shared store. Deleting a
 single `node_modules` frees almost nothing; deleting all of them frees a
@@ -362,7 +417,7 @@ free more than that box is worth on its own.
 And if a local snapshot exists, the report says so: the space won't come
 back until it expires, no matter what you delete.
 
-## Speed
+### Speed
 
 `getattrlistbulk(2)` returns the name *and* all the size attributes for a
 few hundred entries per call. The `readdir` + `lstat` per file used by
@@ -371,29 +426,22 @@ classic tools costs one syscall per file.
 ~262,000 entries in 2.1 s on internal SSD (≈120,000 entries/s, 8 threads),
 2.3 s with a per-file record kept and the index written.
 
-## Two languages, one binary
+### Two languages, one binary
 
-There's no resource bundle to look up: the program is a single binary,
-which is both the app and the command-line tool, and a launch from the
-terminal has no `.lproj` at hand. Every visible string is therefore written
-in place, in both languages, via `tr(en:fr:)` — English first, French
-second, everywhere. It's more verbose than a key table, and much harder to
-leave a string untranslated.
+Every visible string lives in one catalogue, `Resources/Localizable.xcstrings`,
+keyed by its English text and translated into French. The program is a single
+binary, which is both the app and the command-line tool, and a launch from the
+terminal has no `.lproj` at hand: so the catalogue is embedded in the binary at
+build time (the `CadastreStrings` target) rather than shipped beside it.
 
-The language is chosen in this order: `--lang`, then `CADASTRE_LANG`, then
-the preference set from the app's menu, then the system language. Units
-follow suit: "6,3 Go" in French, "6.3 GB" in English, like Finder. The
-permission-request descriptions (Desktop, Documents…) are the only strings
-outside the binary: macOS reads them from `InfoPlist.strings`, which
-`bundle.sh` writes in both languages.
+The language follows the system — the first of English or French among your
+preferred languages, as macOS picks among an app's localisations; there is no
+setting in the app. On the command line, `--lang` and `CADASTRE_LANG` override
+it. Units follow suit: "6,3 Go" in French, "6.3 GB" in English, like Finder.
+The permission prompts (Desktop, Documents…) are read by macOS from
+`InfoPlist.strings`, in `Resources/en.lproj` and `Resources/fr.lproj`.
 
-Switching language from the menu rebuilds the window rather than relabelling
-its controls: every menu, panel and header was built by `tr()` when it was
-created, and a fresh controller is the one place that catches all of them. The
-deletion catalogue is re-evaluated on each access for the same reason — its
-labels live in the session, and the folder is measured again.
-
-## Interface notes
+### Interface notes
 
 The two toolbar menus aren't named after the code: the displayed metric is
 spelled out in full at the bottom of the window ("Area · Real footprint —
@@ -436,59 +484,7 @@ window's footer, and a folder denied for lack of permission is marked the
 same way. An incomplete total reported as complete is exactly the lie this
 program exists to avoid; a floor reported as a floor isn't one.
 
-## Structure
-
-```
-Package.swift            C target + executable, macOS 14
-Sources/CadastreC/
-  include/CadastreC.h    interface: I/O policies, bulk decoding
-  bulk.c                 getattrlistbulk, packed buffer decoding
-Sources/cadastre/
-  L10n.swift             the two languages: tr(en:fr:), units, dates, preference
-  Tree.swift             struct-of-arrays tree, LCA, roll-up, file table
-  Families.swift         clones and hard links: who owns which blocks
-  Walker.swift           parallel, interruptible traversal
-  Index.swift            binary format, local history
-  Diff.swift             matching two scans
-  Reclaim.swift          proof-based catalogue, guards, moving to Trash
-  VolumeReport.swift     container, snapshots, purgeable, TCC
-  Format.swift           terminal rendering
-  main.swift             CLI, JSON exports
-Sources/cadastre/UI/
-  Treemap.swift          flattened model, merging of single-child chains
-  TreemapLayout.swift    squarified (Bruls, Huizing, van Wijk 2000)
-  LayoutSelfTest.swift   geometry invariants
-  Palette.swift          searched-for palette, and the reasoning that fixed its size
-  TreemapRenderer.swift  rectangles instanced in Metal
-  TreemapView.swift      hover, selection, keyboard, search, animated zoom, context menu
-  LabelPass.swift        labels, ink chosen by measured contrast
-  Legend.swift           permanent, labelled legend
-  Window.swift           window, toolbar, menus, breadcrumb, inspector, empty state
-  Session.swift          analysed folder, markers, background scan, whole disk, recents
-  FileWatcher.swift      FSEvents: the trigger behind "follow changes"
-  DiffSheet.swift        "what changed" as a table, leading back to the map
-  ReclaimSheet.swift     checkable catalogue, combined gain, re-verification
-  Snapshot.swift         off-screen PNG export
-  Icon.swift             icon, tiled by the same algorithm as the map
-Tests/cadastreTests/
-  AccountingTests.swift  families, layout, units, guards, diff — on synthetic trees
-Scripts/
-  verify.sh              ground truth: every case has an answer known by construction
-  bundle.sh              builds Cadastre.app (ad hoc signature)
-  release.sh             the same, signed and notarised when CODESIGN_IDENTITY
-                         and NOTARY_PROFILE are set, zipped into dist/ with the CLI
-```
-
-`swift test` covers the corners a real disk does not produce on demand: a
-family straddling two folders, a hard link whose two names must go together,
-a root frame with no title band, units in both languages.
-
-`Scripts/verify.sh` builds real files on a real APFS volume — these numbers
-come from the filesystem, they can't be tested dry — and checks, among other
-things, that `allocated` reproduces `du` exactly, that the treemap's
-geometry is accurate to within 1%, and that the bundle builds.
-
-## Left to do
+### Left to do
 
 - A truly incremental measure behind FSEvents: re-read only the folders
   that changed, and settle again only the families they hold
@@ -496,5 +492,46 @@ geometry is accurate to within 1%, and that the bundle builds.
   warning line rather than a tile
 - An animated transition between two measures: switching the area metric
   reorganises every rectangle at once, and the eye loses what it was following
-- The signature is ad hoc without a Developer ID identity: `Scripts/release.sh`
-  knows how to sign and notarise, it only lacks the credentials
+
+## Build
+
+| Command | What it does |
+|---|---|
+| `make build` | Release build, warnings are errors |
+| `make test` | Unit tests on synthetic trees |
+| `make run` | Launch the app |
+| `make package` | Assemble `build/Cadastre.app`, signed ad hoc |
+| `make sign` | Developer ID signature, notarization and stapling of `build/Cadastre.app` |
+| `make dmg` | `build/Cadastre-<version>.dmg`, notarized |
+| `make shots` | Retake the captures in `docs/img/`, on an invented folder (`outils/demo.sh`) |
+| `make release-check` | Is `build/` publishable? Gatekeeper, captures, changelog, identity |
+| `make lint` | Check compliance with the project charter |
+| `make help` | List every target |
+
+`swift test` (behind `make test`) covers the corners a real disk does not
+produce on demand: a family straddling two folders, a hard link whose two names
+must go together, a root frame with no title band, units in both languages.
+
+`outils/verify.sh` builds real files on a real APFS volume — these numbers
+come from the filesystem, they can't be tested dry — and checks, among other
+things, that `allocated` reproduces `du` exactly, that the treemap's geometry
+is accurate to within 1%, and that the bundle builds.
+
+```
+Package.swift            C target, string catalogue, executable, tests — macOS 14
+Resources/               Info.plist, AppIcon.icns, Localizable.xcstrings, en.lproj, fr.lproj
+Sources/CadastreC/       getattrlistbulk, packed buffer decoding, I/O policies
+Sources/CadastreStrings/ the catalogue, embedded in the binary
+Sources/cadastre/        walker, accounting, index, diff, reclaim catalogue, CLI
+Sources/cadastre/UI/     treemap (layout, Metal renderer, labels), window, sheets
+Tests/CadastreTests/     XCTest on synthetic trees
+outils/                  icone.swift, package.sh, verify.sh, demo.sh, captures.sh
+```
+
+## Dependencies
+
+None — Apple frameworks only (AppKit, Metal, Quartz, CoreServices).
+
+## License
+
+MIT © 2026 gwenn-ha-dev — see [LICENSE](./LICENSE).

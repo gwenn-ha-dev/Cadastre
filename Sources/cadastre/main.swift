@@ -1,6 +1,10 @@
 import Foundation
 import CadastreC
 
+// Before anything reads a file — a record loaded by --since included — so that
+// nothing from here on can make the kernel download an evicted iCloud file.
+cad_set_io_policies()
+
 func usageText() -> String {
     tr("""
     cadastre — disk usage on macOS, without the usual lies
@@ -134,13 +138,20 @@ var index = 0
     }
     return arguments[index]
 }
+@MainActor func nextInt(_ flag: String, atLeast minimum: Int) -> Int {
+    let raw = nextValue(flag)
+    guard let value = Int(raw), value >= minimum else {
+        usageError(tr("%@ expects a whole number, at least %d", flag, minimum))
+    }
+    return value
+}
 
 while index < arguments.count {
     let argument = arguments[index]
     switch argument {
     case "-h", "--help": print(usageText()); exit(0)
-    case "--depth": depth = Int(nextValue(argument)) ?? depth
-    case "--top": topCount = Int(nextValue(argument)) ?? topCount
+    case "--depth": depth = nextInt(argument, atLeast: 0)
+    case "--top": topCount = nextInt(argument, atLeast: 0)
     case "--metric":
         let raw = nextValue(argument)
         guard let parsed = Metric(rawValue: raw) else {
@@ -148,7 +159,7 @@ while index < arguments.count {
         }
         metric = parsed
     case "--json": jsonPath = nextValue(argument)
-    case "--threads": threads = Int(nextValue(argument))
+    case "--threads": threads = nextInt(argument, atLeast: 1)
     case "--cross-mounts": crossMounts = true
     case "--nice": nice = true
     case "--volumes": volumesOnly = true
@@ -176,7 +187,12 @@ while index < arguments.count {
         colorMode = parsed
     case "--size":
         let parts = nextValue(argument).lowercased().split(separator: "x").compactMap { Double($0) }
-        if parts.count == 2 { mapSize = CGSize(width: parts[0], height: parts[1]) }
+        // Bounded both ways: below a few dozen points there is no map left once
+        // the legend is drawn, and Metal refuses a texture past its maximum.
+        guard parts.count == 2, parts.allSatisfy({ $0.isFinite && $0 >= 64 && $0 <= 8192 }) else {
+            usageError(tr("--size expects WxH, each side between 64 and 8192"))
+        }
+        mapSize = CGSize(width: parts[0], height: parts[1])
     case "--trash": doTrash = true; showClean = true
     case "--yes", "-y": assumeYes = true
     case "--no-color": Style.enabled = false
@@ -187,6 +203,12 @@ while index < arguments.count {
         path = argument
     }
     index += 1
+}
+
+// --trash acts on a plain scan's findings; every other mode exits before
+// reaching it, and silently doing nothing is worse than saying so.
+if doTrash && (sincePath != nil || diffPair != nil || snapshotPath != nil || launchUI) {
+    usageError(tr("--trash only works on a plain scan: not with --since, --diff, --snapshot or --ui"))
 }
 
 if showHistory {
@@ -225,7 +247,7 @@ if let diffPair {
 // The window owns its own scanning, so it starts before any of the CLI's
 // preparation — and with no path at all it simply asks for one.
 if launchUI {
-    let start = path.map { URL(fileURLWithPath: ($0 as NSString).expandingTildeInPath).standardizedFileURL.path }
+    let start = path.map { Walker.resolveRoot(URL(fileURLWithPath: ($0 as NSString).expandingTildeInPath).standardizedFileURL.path) }
     var startBaseline: Snapshot? = nil
     var startBaselinePath: String? = nil
     if let sincePath {
@@ -247,7 +269,7 @@ if launchUI {
 }
 
 let scanPath = (path ?? FileManager.default.currentDirectoryPath) as NSString
-let target = URL(fileURLWithPath: scanPath.expandingTildeInPath).standardizedFileURL.path
+let target = Walker.resolveRoot(URL(fileURLWithPath: scanPath.expandingTildeInPath).standardizedFileURL.path)
 
 var isDirectory: ObjCBool = false
 guard FileManager.default.fileExists(atPath: target, isDirectory: &isDirectory), isDirectory.boolValue else {
@@ -306,9 +328,15 @@ interrupt.setEventHandler { walker.cancel() }
 interrupt.resume()
 let result = walker.scan(root: target)
 interrupt.cancel()
+// From here on Ctrl-C must work again — during the Trash question above all.
+signal(SIGINT, SIG_DFL)
 if interactive { FileHandle.standardError.write("\r\u{1B}[K".data(using: .utf8)!) }
 
-if let savePath {
+if savePath != nil && result.stats.cancelled {
+    // A partial record would become the next --since baseline, and everything
+    // the interrupted walk never reached would read as "appeared".
+    FileHandle.standardError.write(tr("cadastre: scan interrupted, not saved — a partial record would make the next comparison wrong\n").data(using: .utf8)!)
+} else if let savePath {
     let destination: String
     do {
         destination = savePath == "auto" ? try SnapshotStore.newPath(for: target, at: scannedAt) : savePath
@@ -372,7 +400,7 @@ if showClean {
     print()
     print(renderer.reclaimSection(findings, in: result, volume: volumeReport, offerTrash: !doTrash))
     if doTrash {
-        _ = Reclaim.trash(findings.candidates, in: result, confirm: !assumeYes)
+        _ = Reclaim.trash(findings.candidates, in: result, confirm: !assumeYes, listed: topCount)
     }
     exit(0)
 }
@@ -389,6 +417,23 @@ if let jsonPath {
     }
 }
 
+/// A string's JSON body: quotes, backslashes and every control character
+/// escaped — a newline in a file name is legal, and must not break the file.
+func jsonEscaped(_ s: String) -> String {
+    var escaped = ""
+    for scalar in s.unicodeScalars {
+        switch scalar {
+        case "\"": escaped += "\\\""
+        case "\\": escaped += "\\\\"
+        case "\n": escaped += "\\n"
+        case "\t": escaped += "\\t"
+        case let c where c.value < 0x20: escaped += String(format: "\\u%04x", c.value)
+        default: escaped.unicodeScalars.append(scalar)
+        }
+    }
+    return escaped
+}
+
 /// Flat-ish JSON of the directory tree, one object per node, all five metrics
 /// kept. This is the feed a treemap renderer consumes.
 @MainActor func exportJSON(_ result: ScanResult, to file: String) throws {
@@ -397,21 +442,7 @@ if let jsonPath {
     out.reserveCapacity(tree.count * 160)
 
     func append(_ text: String) { out.append(text.data(using: .utf8)!) }
-
-    func escape(_ s: String) -> String {
-        var escaped = ""
-        for scalar in s.unicodeScalars {
-            switch scalar {
-            case "\"": escaped += "\\\""
-            case "\\": escaped += "\\\\"
-            case "\n": escaped += "\\n"
-            case "\t": escaped += "\\t"
-            case let c where c.value < 0x20: escaped += String(format: "\\u%04x", c.value)
-            default: escaped.unicodeScalars.append(scalar)
-            }
-        }
-        return escaped
-    }
+    func escape(_ s: String) -> String { jsonEscaped(s) }
 
     func emit(_ node: Int32) {
         let sizes = tree.total[Int(node)]
@@ -455,10 +486,7 @@ if let jsonPath {
 /// The diff in machine-readable form — what the verification harness asserts
 /// on, and what a future UI will consume rather than re-deriving.
 func writeDiffJSON(_ diff: ScanDiff, to file: String) throws {
-    func quote(_ s: String) -> String {
-        "\"" + s.replacingOccurrences(of: "\\", with: "\\\\")
-                 .replacingOccurrences(of: "\"", with: "\\\"") + "\""
-    }
+    func quote(_ s: String) -> String { "\"" + jsonEscaped(s) + "\"" }
     func label(_ status: ScanDiff.Status) -> String {
         switch status {
         case .added: return "added"
@@ -501,10 +529,7 @@ func writeDiffJSON(_ diff: ScanDiff, to file: String) throws {
 /// The reclaim report in machine-readable form.
 func writeReclaimJSON(_ findings: Reclaim.Findings, in result: ScanResult, to file: String) throws {
     let candidates = findings.candidates
-    func quote(_ s: String) -> String {
-        "\"" + s.replacingOccurrences(of: "\\", with: "\\\\")
-                 .replacingOccurrences(of: "\"", with: "\\\"") + "\""
-    }
+    func quote(_ s: String) -> String { "\"" + jsonEscaped(s) + "\"" }
     func label(_ confidence: Reclaim.Confidence) -> String {
         switch confidence {
         case .regenerable: return "regenerable"

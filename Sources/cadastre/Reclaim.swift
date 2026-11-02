@@ -88,10 +88,15 @@ enum Reclaim {
 
     static var catalogue: [Rule] { [
         // --- Build output: evidence is the file the tool rebuilds it from ---
+        // A lockfile, not just a package.json: an *installed* package carries
+        // a package.json too (a global npm tool, an editor extension), and
+        // "npm install" does not bring those back. A project being developed
+        // has a lockfile; a package unpacked from a registry does not.
         Rule(id: "node_modules", label: tr("npm dependencies"), confidence: .regenerable,
              match: .named("node_modules"),
-             siblings: ["package.json"],
-             recovery: "npm install / pnpm install / yarn"),
+             siblings: ["package-lock.json", "npm-shrinkwrap.json", "yarn.lock",
+                        "pnpm-lock.yaml", "bun.lock", "bun.lockb"],
+             recovery: "npm ci / pnpm install / yarn"),
         Rule(id: "cargo-target", label: tr("Rust build output"), confidence: .regenerable,
              match: .named("target"),
              siblings: ["Cargo.toml"],
@@ -214,13 +219,25 @@ enum Reclaim {
 
     // MARK: - Guards
 
-    /// Places this program will not propose to delete from, whatever a rule
-    /// matched. The read-only system volume, anything managed by the OS, and
-    /// application bundles.
+    /// Places this program will not delete from, whatever a rule matched or
+    /// the user picked: the read-only system volume, anything managed by the
+    /// OS, and installed applications. Written lower-case — see `guardForm`.
     private static let forbidden = [
-        "/System", "/usr", "/bin", "/sbin", "/Applications", "/Library/Apple",
-        "/private/var/db", "/private/var/folders", "/Volumes/Recovery",
+        "/system", "/usr", "/bin", "/sbin", "/applications", "/library/apple",
+        "/private/var/db", "/private/var/folders", "/volumes/recovery",
     ]
+
+    /// Places never *proposed*, though the user may still trash something
+    /// there by hand: iCloud Drive and the File Provider mounts, where moving
+    /// a folder to the Trash deletes it on every device, and where evicted
+    /// files may be downloaded just to be moved.
+    private static var cloudRoots: [String] {
+        ["~/Library/Mobile Documents", "~/Library/CloudStorage"].map { guardForm(expand($0)) }
+    }
+
+    /// Directory extensions that make a folder a bundle: trashing anything
+    /// inside one breaks its code signature, whatever the folder is called.
+    private static let bundleExtensions: Set<String> = ["app", "framework", "appex", "xpc", "kext"]
 
     static let dataVolume = "/System/Volumes/Data"
 
@@ -232,8 +249,22 @@ enum Reclaim {
         return path
     }
 
+    /// The form guards compare: firmlink removed, `/var`, `/tmp` and `/etc`
+    /// put back under `/private` (`standardizingPath` strips it, so a scan of
+    /// `/private/var/folders` hands out `/var/folders/…`), and lower-cased,
+    /// because the volume is case-insensitive and `/applications` *is*
+    /// `/Applications`.
+    static func guardForm(_ rawPath: String) -> String {
+        var path = canonical(rawPath)
+        for alias in ["/var", "/tmp", "/etc"] where path == alias || path.hasPrefix(alias + "/") {
+            path = "/private" + path
+            break
+        }
+        return path.lowercased()
+    }
+
     static func isProtected(_ rawPath: String) -> Bool {
-        let path = canonical(rawPath)
+        let path = guardForm(rawPath)
         // /usr/local and /opt are user territory; the rest of /usr is not.
         // Checked first: `/usr` is in the forbidden list, and the prefix test
         // would otherwise claim Homebrew's whole tree for the system.
@@ -241,6 +272,14 @@ enum Reclaim {
             return false
         }
         return forbidden.contains(where: { path == $0 || path.hasPrefix($0 + "/") })
+    }
+
+    /// The path as the filesystem resolves it, symbolic links included —
+    /// `nil` when it cannot be resolved.
+    static func resolved(_ path: String) -> String? {
+        guard let real = realpath(path, nil) else { return nil }
+        defer { free(real) }
+        return String(cString: real)
     }
 
     private static func exists(_ path: String) -> Bool {
@@ -258,6 +297,24 @@ enum Reclaim {
         if (info.st_mode & S_IFMT) == S_IFLNK { return tr("is a symbolic link") }
         guard (info.st_mode & S_IFMT) == S_IFDIR else { return tr("is no longer a folder") }
         if isProtected(path) { return tr("is in a protected area") }
+        // A link higher up the path would send the move somewhere the scan
+        // never looked: the folder must be where its path says it is.
+        guard let real = resolved(path), guardForm(real) == guardForm(path) else {
+            return tr("is reached through a symbolic link")
+        }
+        let form = guardForm(path)
+        if cloudRoots.contains(where: { form == $0 || form.hasPrefix($0 + "/") }) {
+            return tr("is in iCloud Drive or a cloud folder")
+        }
+        let components = (path as NSString).pathComponents
+        if components.contains(where: { bundleExtensions.contains(($0 as NSString).pathExtension.lowercased()) }) {
+            return tr("is inside an application bundle")
+        }
+        // Below a node_modules sits an installed package, not a project: its
+        // own build output and dependencies are what makes it run.
+        if case .named = rule.match, components.dropLast().contains("node_modules") {
+            return tr("is inside an installed package")
+        }
 
         // A working tree is not build output, whatever it is called.
         if exists(path + "/.git") { return tr("contains a git repository") }
@@ -480,7 +537,10 @@ extension Reclaim {
     /// The Trash and not `unlink`: every judgement in this file is a heuristic,
     /// and a heuristic needs an undo. Every path is re-verified here rather
     /// than trusted from the scan, because the scan may be minutes old.
-    static func trash(_ candidates: [Candidate], in result: ScanResult, confirm: Bool) -> Int {
+    /// `listed` is how many entries per group the report above showed: when
+    /// a group was cut short, every path is printed before the question, so
+    /// that "yes" never covers a folder nobody saw.
+    static func trash(_ candidates: [Candidate], in result: ScanResult, confirm: Bool, listed: Int) -> Int {
         let removable = candidates.filter { $0.rule.confidence != .review }
         guard !removable.isEmpty else {
             print(tr("  nothing to move to the Trash"))
@@ -488,6 +548,15 @@ extension Reclaim {
         }
 
         if confirm {
+            let cutShort = [Confidence.regenerable, .cache].contains { confidence in
+                removable.filter { $0.rule.confidence == confidence }.count > listed
+            }
+            if cutShort {
+                print(tr("\n  The list above was shortened. Every folder that would move:"))
+                for candidate in removable {
+                    print("  " + humanBytes(candidate.sizes.retained).padded(10) + " \(candidate.path)")
+                }
+            }
             let total = combinedFreed(removable, in: result)
             print(tr("\n  %d folders to the Trash, %@ to reclaim.", removable.count, humanBytes(total)))
             print(tr("  Type “yes” to confirm: "), terminator: "")

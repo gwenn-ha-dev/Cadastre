@@ -25,7 +25,7 @@ le même binaire en ligne de commande.
   par type de fichier, profondeur, blocs partagés, ce qui a changé ou
   récupérabilité.
 - **Sûr à supprimer** : un catalogue qui ne propose un dossier qu'avec la
-  preuve qu'un outil sait le reconstruire — un `package.json` à côté de
+  preuve qu'un outil sait le reconstruire — un fichier de verrouillage à côté de
   `node_modules`, un `Cargo.toml` à côté de `target` — et calcule le gain de la
   sélection entière. Tout part à la corbeille, et `⌘Z` le remet en place.
 - **Ce qui a bougé** : posez un repère, revenez plus tard, et voyez où sont
@@ -386,7 +386,8 @@ plancher.
 
 Le principe de ce catalogue est qu'**un nom ne suffit jamais**. `build` est la
 sortie d'un compilateur dans un projet et dix ans de travail dans un autre.
-Chaque règle exige donc une preuve — un `package.json` à côté de
+Chaque règle exige donc une preuve — un fichier de verrouillage
+(`package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`…) à côté de
 `node_modules`, un `Cargo.toml` à côté de `target`, un `CMakeCache.txt` dans
 `build` — et un dossier qui ne peut pas la produire n'est pas proposé. Être
 inutile se rattrape, se tromper non.
@@ -403,9 +404,15 @@ Gardes appliquées à chaque candidat, au moment du rapport **et** à nouveau
 juste avant la suppression, parce qu'un scan est une photo et que le disque
 continue de bouger :
 
-- jamais un lien symbolique
+- jamais un lien symbolique, ni un chemin qui passe par l'un d'eux
 - jamais un dossier contenant un `.git` — un arbre de travail n'est pas une sortie de compilation
 - jamais sous `/System`, `/usr`, `/bin`, `/Applications`, `/private/var/db`…
+  — comparé sans tenir compte de la casse, et à travers `/var` → `/private/var`
+- jamais à l'intérieur d'un paquet d'application (`.app`, `.framework`…), dont
+  la signature serait cassée, ni d'un paquet installé (un `node_modules` dans
+  un `node_modules`)
+- jamais proposé dans iCloud Drive ni `~/Library/CloudStorage`, où la
+  corbeille supprime sur tous les appareils
 - jamais un candidat imbriqué dans un autre (sinon tout est compté deux fois)
 - suppression vers la **corbeille**, jamais `unlink` : ces règles sont des
   heuristiques, et une heuristique a besoin d'un retour en arrière

@@ -22,7 +22,7 @@ An app with a map, and the same binary as a command-line tool.
 - **A treemap rendered in Metal**, one rectangle per file, animated zoom,
   coloured by file type, depth, shared blocks, what changed, or reclaimability.
 - **Safe to delete**: a catalogue that only offers a folder with proof that a
-  tool can rebuild it — a `package.json` beside `node_modules`, a `Cargo.toml`
+  tool can rebuild it — a lockfile beside `node_modules`, a `Cargo.toml`
   beside `target` — and computes the gain of the whole selection. Everything
   goes to the Trash, and `⌘Z` puts it back.
 - **What changed**: drop a marker, come back later, and see where the bytes
@@ -372,9 +372,10 @@ floor.
 
 The principle behind this catalogue is that **a name is never enough**.
 `build` is a compiler's output in one project and ten years of work in
-another. Every rule therefore requires proof — a `package.json` next to
-`node_modules`, a `Cargo.toml` next to `target`, a `CMakeCache.txt` inside
-`build` — and a folder that can't produce it isn't offered. Being useless
+another. Every rule therefore requires proof — a lockfile
+(`package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`…) next to `node_modules`,
+a `Cargo.toml` next to `target`, a `CMakeCache.txt` inside `build` — and a
+folder that can't produce it isn't offered. Being useless
 can be forgiven, being wrong can't.
 
 Three levels, and the third is never deleted by the program:
@@ -388,9 +389,15 @@ Three levels, and the third is never deleted by the program:
 Guards applied to every candidate, at report time **and** again right
 before deletion, because a scan is a snapshot and the disk keeps moving:
 
-- never a symbolic link
+- never a symbolic link, and never a path that goes through one
 - never a folder containing a `.git` — a working tree isn't a build output
 - never under `/System`, `/usr`, `/bin`, `/Applications`, `/private/var/db`…
+  — compared without regard to case, and through `/var` → `/private/var`
+- never inside an application bundle (`.app`, `.framework`…), whose
+  signature it would break, nor inside an installed package (a
+  `node_modules` within a `node_modules`)
+- never proposed in iCloud Drive or `~/Library/CloudStorage`, where the
+  Trash deletes on every device
 - never a candidate nested inside another (otherwise everything is counted twice)
 - deletion goes to the **Trash**, never `unlink`: these rules are
   heuristics, and a heuristic needs an undo

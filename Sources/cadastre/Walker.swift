@@ -80,11 +80,24 @@ final class Walker: @unchecked Sendable {
         gate.unlock()
     }
 
+    /// The folder a scan will actually walk. A root that is itself a symbolic
+    /// link (`/tmp`, `/var`, a project linked from elsewhere) is followed —
+    /// the walk opens directories with `O_NOFOLLOW`, and would otherwise
+    /// report an empty folder. Links *below* the root are never followed.
+    static func resolveRoot(_ rawPath: String) -> String {
+        let path = (rawPath as NSString).standardizingPath
+        var info = stat()
+        if lstat(path, &info) == 0, (info.st_mode & S_IFMT) == S_IFLNK, let real = Reclaim.resolved(path) {
+            return real
+        }
+        return path
+    }
+
     func scan(root rawPath: String) -> ScanResult {
         let started = Date()
         cad_set_io_policies()
 
-        let rootPath = (rawPath as NSString).standardizingPath
+        let rootPath = Walker.resolveRoot(rawPath)
         let rootNode = tree.addNode(name: rootPath, parent: -1)
         rootDev = deviceOf(path: rootPath)
         tree.own[Int(rootNode)] = rootDirectoryOwnSize(rootPath)
@@ -108,7 +121,9 @@ final class Walker: @unchecked Sendable {
         applyRetained(settlement)
 
         stats.elapsed = Date().timeIntervalSince(started)
+        gate.lock()
         stats.cancelled = cancelled
+        gate.unlock()
         stats.clonedInodes = families.clones.reduce(0) { $0 + $1.value.members.count }
         stats.hardLinkedInodes = families.inodes.values.filter { $0.nlink > 1 }.count
 
@@ -200,7 +215,9 @@ final class Walker: @unchecked Sendable {
         while true {
             let n = cad_bulk(fd, scratch, scratchBytes, entries, Int32(capacity))
             if n <= 0 {
-                if n < 0 { batch.stats.entryErrors += 1 }
+                // An error part-way through leaves the entries already read
+                // in place: the folder's total is then a floor, and says so.
+                if n < 0 { batch.stats.entryErrors += 1; batch.unreadable = true }
                 break
             }
             for i in 0..<Int(n) {
@@ -212,7 +229,9 @@ final class Walker: @unchecked Sendable {
 
     private func consume(_ entry: inout cad_entry, into batch: inout Batch,
                          parentPath: String, cutoff: Int64) {
-        if entry.err != 0 {
+        // A truncated name cannot be opened or matched again: counting the
+        // entry as an error is honest, queueing a path that does not exist is not.
+        if entry.err != 0 || (entry.valid & CAD_V_TRUNC) != 0 {
             batch.stats.entryErrors += 1
             return
         }
@@ -226,7 +245,7 @@ final class Walker: @unchecked Sendable {
             // side of a firmlink — /Users seen from the sealed system volume,
             // for instance. Descending would double-count the data volume.
             if (isMountPoint || onForeignVolume) && !options.crossMounts {
-                batch.stats.crossedMounts = 1
+                batch.stats.crossedMounts += 1
                 batch.subdirectories.append(Subdirectory(name: name, own: Sizes(), skip: .otherVolume))
                 return
             }

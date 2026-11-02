@@ -183,11 +183,11 @@ struct ScanDiff {
 
 func humanDuration(_ seconds: TimeInterval) -> String {
     let total = Int(abs(seconds).rounded())
-    if total < 90 { return "\(total) s" }
+    if total < 90 { return tr("%d s", total) }
     let minutes = total / 60
-    if minutes < 90 { return "\(minutes) min" }
+    if minutes < 90 { return tr("%d min", minutes) }
     let hours = minutes / 60
-    if hours < 48 { return "\(hours) h \(minutes % 60) min" }
+    if hours < 48 { return tr("%d h %d min", hours, minutes % 60) }
     let days = hours / 24
     return tr("%d d %d h", days, hours % 24)
 }

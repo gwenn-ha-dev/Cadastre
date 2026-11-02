@@ -73,6 +73,9 @@ final class Session {
     /// compare against it.
     @discardableResult
     func mark() throws -> String {
+        // A partial record would become a baseline, and everything the stopped
+        // walk never reached would then read as "appeared".
+        guard !isPartial else { throw PartialScan() }
         let destination = try SnapshotStore.newPath(for: path, at: scannedAt)
         try ScanIndex.write(result, scannedAt: scannedAt, to: destination)
         return destination
@@ -82,6 +85,12 @@ final class Session {
     /// scan on screen — comparing a scan to itself says nothing.
     func history() -> [(path: String, date: Date)] {
         SnapshotStore.history(for: path).filter { abs($0.date.timeIntervalSince(scannedAt)) > 1 }
+    }
+}
+
+struct PartialScan: Error, CustomStringConvertible {
+    var description: String {
+        tr("This scan was stopped before the end. Measure the folder again, then place the marker.")
     }
 }
 

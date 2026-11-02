@@ -16,7 +16,8 @@
 #include <stddef.h>
 #include <sys/types.h>
 
-#define CAD_NAME_CAP 512
+// APFS allows 255 UTF-16 units per name: up to 765 bytes of UTF-8.
+#define CAD_NAME_CAP 1024
 
 // Which optional fields the filesystem actually returned for an entry.
 #define CAD_V_PRIVATE  0x01u   // ATTR_CMNEXT_PRIVATESIZE

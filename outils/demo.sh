@@ -35,8 +35,9 @@ fi
 
 [ ! -e "$root" ] || { echo "demo: $root already exists" >&2; exit 1; }
 
-# A web project: dependencies that npm can rebuild (package.json is the proof).
+# A web project: dependencies that npm can rebuild (the lockfile is the proof).
 small "$root/website/package.json" 2
+small "$root/website/package-lock.json" 8
 for f in index app router store; do small "$root/website/src/$f.ts" 24; done
 for pkg in react react-dom typescript esbuild vite rollup lodash date-fns three d3 \
            eslint prettier postcss tailwindcss sharp; do

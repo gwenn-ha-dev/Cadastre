@@ -18,7 +18,9 @@ import Foundation
 /// disagreeing.
 enum ScanIndex {
     static let magic: UInt32 = 0x43445354   // "CDST"
-    static let version: UInt32 = 1
+    /// 2 added the "interrupted" flag to the statistics; 1 is still read.
+    static let version: UInt32 = 2
+    static let readableVersions: ClosedRange<UInt32> = 1...2
 
     struct Header {
         var version: UInt32
@@ -41,6 +43,7 @@ enum ScanIndex {
         case notAnIndex(String)
         case unsupportedVersion(UInt32)
         case truncated(String)
+        case corrupt(String)
 
         var description: String {
             switch self {
@@ -48,6 +51,7 @@ enum ScanIndex {
             case .unsupportedVersion(let v):
                 return tr("index version %d, expected %d", v, ScanIndex.version)
             case .truncated(let path): return tr("truncated index: %@", path)
+            case .corrupt(let path): return tr("corrupt index: %@", path)
             }
         }
     }
@@ -119,14 +123,15 @@ enum ScanIndex {
 
             guard try reader.u32() == magic else { throw Failure.notAnIndex(path) }
             let fileVersion = try reader.u32()
-            guard fileVersion == version else { throw Failure.unsupportedVersion(fileVersion) }
+            guard readableVersions.contains(fileVersion) else { throw Failure.unsupportedVersion(fileVersion) }
             let hasFiles = try reader.u32() == 1
             let scannedAt = Date(timeIntervalSince1970: try reader.f64())
             let directoryCount = Int(try reader.u32())
             let fileCount = Int(try reader.u32())
             let nameBytes = Int(try reader.u64())
             var statsValues = [Int64]()
-            for _ in 0..<ScanStats.fieldCount { statsValues.append(try reader.i64()) }
+            let statsCount = fileVersion >= 2 ? ScanStats.fieldCount : ScanStats.fieldCount - 1
+            for _ in 0..<statsCount { statsValues.append(try reader.i64()) }
             let rootPathLength = Int(try reader.u32())
             let rootPath = try reader.string(rootPathLength)
 
@@ -151,6 +156,12 @@ enum ScanIndex {
                 let ownFileCount: Int32 = try reader.i32()
                 let skippedRaw = try reader.u32()
 
+                // Records are parent-before-child, the root alone has none: a
+                // parent outside that is a damaged file, not an index to trust.
+                let isRoot = tree.count == 0
+                guard isRoot ? parent == -1 : (parent >= 0 && Int(parent) < tree.count) else {
+                    throw Failure.corrupt(path)
+                }
                 tree.name.append(try name(at: nameOffset, length: nameLength))
                 tree.parent.append(parent)
                 tree.depth.append(depth)
@@ -177,6 +188,7 @@ enum ScanIndex {
                     let nameLength = try reader.u32()
                     let flags = FileTable.Flags(rawValue: UInt16(truncatingIfNeeded: try reader.u32()))
                     let sizes = try reader.sizes()
+                    guard parent >= 0, Int(parent) < tree.count else { throw Failure.corrupt(path) }
                     table.append(name: try name(at: nameOffset, length: nameLength),
                                  parent: parent, sizes: sizes, flags: flags)
                 }
@@ -187,6 +199,21 @@ enum ScanIndex {
                                 rootPath: rootPath, directoryCount: directoryCount, fileCount: fileCount)
             return Loaded(header: header, tree: tree, files: files,
                           stats: ScanStats(serialized: statsValues))
+        }
+    }
+
+    /// The scanned folder recorded in an index, read from its header alone.
+    static func rootPath(of path: String) throws -> String {
+        let data = try Data(contentsOf: URL(fileURLWithPath: path), options: .alwaysMapped)
+        return try data.withUnsafeBytes { raw -> String in
+            var reader = Reader(raw: raw, path: path)
+            guard try reader.u32() == magic else { throw Failure.notAnIndex(path) }
+            let fileVersion = try reader.u32()
+            guard readableVersions.contains(fileVersion) else { throw Failure.unsupportedVersion(fileVersion) }
+            _ = try reader.take(4 + 8 + 4 + 4 + 8)          // files flag, date, counts, arena size
+            let statsCount = fileVersion >= 2 ? ScanStats.fieldCount : ScanStats.fieldCount - 1
+            _ = try reader.take(8 * statsCount)
+            return try reader.string(Int(try reader.u32()))
         }
     }
 
@@ -232,18 +259,18 @@ private extension Array where Element == UInt8 {
 }
 
 extension ScanStats {
-    static let fieldCount = 12
+    static let fieldCount = 13
 
     var serialized: [Int64] {
         [Int64(directories), Int64(files), Int64(deniedDirectories), Int64(entryErrors),
          Int64(crossedMounts), Int64(datalessFiles), datalessLogicalBytes,
          Int64(compressedFiles), compressedSaved, sparseSaved,
-         Int64(clonedInodes), Int64(hardLinkedInodes)]
+         Int64(clonedInodes), Int64(hardLinkedInodes), cancelled ? 1 : 0]
     }
 
     init(serialized values: [Int64]) {
         self.init()
-        guard values.count >= ScanStats.fieldCount else { return }
+        guard values.count >= ScanStats.fieldCount - 1 else { return }
         directories = Int(values[0])
         files = Int(values[1])
         deniedDirectories = Int(values[2])
@@ -256,6 +283,7 @@ extension ScanStats {
         sparseSaved = values[9]
         clonedInodes = Int(values[10])
         hardLinkedInodes = Int(values[11])
+        cancelled = values.count > 12 && values[12] != 0
     }
 }
 
@@ -283,6 +311,11 @@ enum SnapshotStore {
             .replacingOccurrences(of: " ", with: "-")
     }
 
+    private static func normalized(_ path: String) -> String {
+        let standard = (path as NSString).standardizingPath
+        return standard.count > 1 && standard.hasSuffix("/") ? String(standard.dropLast()) : standard
+    }
+
     private static var stamp: DateFormatter {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyyMMdd-HHmmss"
@@ -298,12 +331,20 @@ enum SnapshotStore {
     }
 
     /// Saved scans of one path, newest first.
+    ///
+    /// The file name only narrows the search: `/a/b_c` and `/a_b/c` share a
+    /// slug, so each candidate's header is read and its root compared.
     static func history(for scanPath: String? = nil) -> [(path: String, date: Date)] {
         let entries = (try? FileManager.default.contentsOfDirectory(atPath: directory)) ?? []
         let prefix = scanPath.map { slug($0) + "@" }
+        let wanted = scanPath.map(normalized)
         return entries
             .filter { $0.hasSuffix(".cdst") && (prefix == nil || $0.hasPrefix(prefix!)) }
             .map { (directory as NSString).appendingPathComponent($0) }
+            .filter { path in
+                guard let wanted else { return true }
+                return (try? ScanIndex.rootPath(of: path)).map(normalized) == wanted
+            }
             .compactMap { path in
                 // The date in the name is when the scan ran; the file's own
                 // mtime is when it happened to be written, which can be much

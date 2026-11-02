@@ -52,6 +52,23 @@
         }
       }
     },
+    "\n  The list above was shortened. Every folder that would move:": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\n  The list above was shortened. Every folder that would move:"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\n  La liste ci-dessus était abrégée. Tous les dossiers qui partiraient :"
+          }
+        }
+      }
+    },
     "\n  tree written to %@": {
       "extractionState": "manual",
       "localizations": {
@@ -630,6 +647,23 @@
         }
       }
     },
+    "%@ expects a whole number, at least %d": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ expects a whole number, at least %d"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ attend un nombre entier, au moins %d"
+          }
+        }
+      }
+    },
     "%@ files appeared · %@ vanished · threshold %@": {
       "extractionState": "manual",
       "localizations": {
@@ -920,6 +954,23 @@
         }
       }
     },
+    "%d h %d min": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d h %d min"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d h %d min"
+          }
+        }
+      }
+    },
     "%d hard links": {
       "extractionState": "manual",
       "localizations": {
@@ -971,6 +1022,23 @@
         }
       }
     },
+    "%d min": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d min"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d min"
+          }
+        }
+      }
+    },
     "%d of %d items restored. The rest is still in the Trash.": {
       "extractionState": "manual",
       "localizations": {
@@ -1001,6 +1069,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "%d rectangles, %d cadres vérifiés, erreur max %.4f, rapport médian %.2f"
+          }
+        }
+      }
+    },
+    "%d s": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d s"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d s"
           }
         }
       }
@@ -1103,6 +1188,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "(refusé)"
+          }
+        }
+      }
+    },
+    "--size expects WxH, each side between 64 and 8192": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "--size expects WxH, each side between 64 and 8192"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "--size attend LxH, chaque côté entre 64 et 8192"
+          }
+        }
+      }
+    },
+    "--trash only works on a plain scan: not with --since, --diff, --snapshot or --ui": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "--trash only works on a plain scan: not with --since, --diff, --snapshot or --ui"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "--trash ne s'applique qu'à un scan simple : pas avec --since, --diff, --snapshot ni --ui"
           }
         }
       }
@@ -3453,6 +3572,23 @@
         }
       }
     },
+    "This scan was stopped before the end. Measure the folder again, then place the marker.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This scan was stopped before the end. Measure the folder again, then place the marker."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce scan a été arrêté avant la fin. Mesurez à nouveau le dossier, puis placez le repère."
+          }
+        }
+      }
+    },
     "Trash": {
       "extractionState": "manual",
       "localizations": {
@@ -4082,6 +4218,23 @@
         }
       }
     },
+    "cadastre: scan interrupted, not saved — a partial record would make the next comparison wrong\n": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "cadastre: scan interrupted, not saved — a partial record would make the next comparison wrong\n"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "cadastre : scan interrompu, non enregistré — un relevé partiel fausserait la prochaine comparaison\n"
+          }
+        }
+      }
+    },
     "capacity": {
       "extractionState": "manual",
       "localizations": {
@@ -4265,6 +4418,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "recopiés au prochain branchement de l'appareil concerné"
+          }
+        }
+      }
+    },
+    "corrupt index: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "corrupt index: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "index corrompu : %@"
           }
         }
       }
@@ -4881,6 +5051,57 @@
         }
       }
     },
+    "is in iCloud Drive or a cloud folder": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "is in iCloud Drive or a cloud folder"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "est dans iCloud Drive ou un dossier cloud"
+          }
+        }
+      }
+    },
+    "is inside an application bundle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "is inside an application bundle"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "est à l'intérieur d'un paquet d'application"
+          }
+        }
+      }
+    },
+    "is inside an installed package": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "is inside an installed package"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "est à l'intérieur d'un paquet installé"
+          }
+        }
+      }
+    },
     "is no longer a folder": {
       "extractionState": "manual",
       "localizations": {
@@ -4894,6 +5115,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "n'est plus un dossier"
+          }
+        }
+      }
+    },
+    "is reached through a symbolic link": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "is reached through a symbolic link"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "est atteint par un lien symbolique"
           }
         }
       }

@@ -6,6 +6,11 @@ Versioning: [SemVer](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-11-02
+
+First public release: 0.3.0 was prepared, then reviewed before it went out,
+and what the review found is below.
+
 ### Changed
 - `node_modules` is offered only with a lockfile beside it
   (`package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`…): a `package.json`
@@ -53,7 +58,7 @@ Versioning: [SemVer](https://semver.org/spec/v2.0.0.html).
 
 ## [0.3.0] — 2026-10-09
 
-First public release.
+Prepared as the first public release, never published.
 
 ### Added
 - Signed with a Developer ID and notarized: the `.dmg` opens with a double
@@ -93,5 +98,5 @@ Never published; recorded for history.
 - French and English throughout, units and dates included.
 - Wider reclaim catalogue; nine unit tests.
 
-[Unreleased]: https://github.com/gwenn-ha-dev/Cadastre/compare/v0.3.0...HEAD
-[0.3.0]: https://github.com/gwenn-ha-dev/Cadastre/releases/tag/v0.3.0
+[Unreleased]: https://github.com/gwenn-ha-dev/Cadastre/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/gwenn-ha-dev/Cadastre/releases/tag/v0.4.0

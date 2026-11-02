@@ -410,7 +410,7 @@ print(renderer.topFilesSection(result))
 
 if let jsonPath {
     do {
-        try exportJSON(result, to: jsonPath)
+        try exportJSON(result, by: metric, to: jsonPath)
         print(Style.dim(tr("\n  tree written to %@", jsonPath)))
     } catch {
         fail(tr("could not write JSON: %@", "\(error)"))
@@ -436,11 +436,11 @@ func jsonEscaped(_ s: String) -> String {
 
 /// Flat-ish JSON of the directory tree, one object per node, all five metrics
 /// kept. This is the feed a treemap renderer consumes.
-@MainActor func exportJSON(_ result: ScanResult, to file: String) throws {
+/// Not on the main actor, and given the metric rather than reading the global:
+/// some compilers make the sort closures main-actor closures otherwise, and
+/// then refuse to send `tree` into them.
+func exportJSON(_ result: ScanResult, by measure: Metric, to file: String) throws {
     let tree = result.tree
-    // A local copy: capturing the main-actor global in the sort closures makes
-    // them main-actor closures, which older compilers refuse to send `tree` to.
-    let measure = metric
     var out = Data()
     out.reserveCapacity(tree.count * 160)
 
@@ -475,7 +475,7 @@ func jsonEscaped(_ s: String) -> String {
 
     append("{\"root\":")
     emit(result.root)
-    append(",\"metric\":\"\(metric.rawValue)\"")
+    append(",\"metric\":\"\(measure.rawValue)\"")
     append(",\"scannedAt\":\"\(ISO8601DateFormatter().string(from: Date()))\"")
     append(",\"directories\":\(result.stats.directories)")
     append(",\"files\":\(result.stats.files)")

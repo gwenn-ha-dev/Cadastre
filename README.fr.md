@@ -12,7 +12,7 @@ L'occupation disque sur macOS, qui distingue « quelle taille ça fait » de
 différentes, avec deux réponses différentes. Une application avec une carte, et
 le même binaire en ligne de commande.
 
-![Cadastre mesurant un dossier « Projects » de 2,35 Go : un treemap coloré par type de fichier — un environnement virtuel Python et des données CSV à gauche, une sortie de compilation Rust en gris, deux vidéos en violet, de l'audio FLAC, des photos et des dépendances web — et un inspecteur qui liste les huit dossiers du premier niveau, de ml-notebook à 529 Mo jusqu'à documents à 20,0 Mo](docs/img/map.fr.png)
+![Cadastre mesurant un dossier « Projects » de 2,35 Go : un treemap coloré par type de fichier — un environnement virtuel Python et des données CSV à gauche, les bibliothèques de la compilation Rust dans le même rouge que les binaires Python, deux vidéos en violet, de l'audio FLAC, des photos et des dépendances web — et un inspecteur qui liste les huit dossiers du premier niveau, de ml-notebook à 529 Mo jusqu'à documents à 20,0 Mo](docs/img/map.fr.png)
 
 ## Fonctionnalités
 
@@ -42,7 +42,7 @@ le même binaire en ligne de commande.
 
 | Par blocs partagés | Récupérer de l'espace |
 |---|---|
-| ![Le même dossier coloré par blocs partagés : presque tout en bleu foncé, exclusif ; la vidéo de drone, son clone dans backups, ainsi que stations.csv et son clone en bleu pâle, entièrement partagés](docs/img/shared.fr.png) | ![Le panneau Récupérer de l'espace sur la carte : node_modules 406 Mo, target 350 Mo et .venv 345 Mo, chacun marqué régénérable avec la commande qui le reconstruit, 1,10 Go sélectionnés, et un bouton Mettre à la corbeille](docs/img/reclaim.fr.png) |
+| ![Le même dossier coloré par blocs partagés : presque tout en bleu pâle, exclusif ; la vidéo de drone, son clone dans backups, ainsi que stations.csv et son clone en bleu foncé, entièrement partagés](docs/img/shared.fr.png) | ![Le panneau Récupérer de l'espace sur la carte : node_modules 406 Mo, target 350 Mo et .venv 345 Mo, chacun marqué régénérable avec la commande qui le reconstruit, 1,10 Go sélectionnés, et un bouton Mettre à la corbeille](docs/img/reclaim.fr.png) |
 
 Les tuiles pâles sont des clones : supprimer la vidéo de `backups` ne libère
 rien tant que l'originale reste, et c'est à ça que sert *Par blocs partagés*.

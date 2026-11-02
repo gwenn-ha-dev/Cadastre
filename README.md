@@ -11,7 +11,7 @@ Disk usage on macOS that tells apart "how big is it" from "what do I get back
 if I delete it" — on APFS, two different questions with two different answers.
 An app with a map, and the same binary as a command-line tool.
 
-![Cadastre measuring a 2.35 GB "Projects" folder: a treemap coloured by file type — a Python virtual environment and CSV data on the left, a Rust build output in grey, two videos in purple, FLAC audio, photos and web dependencies — and an inspector listing the eight top-level folders, from ml-notebook at 529 MB down to documents at 20 MB](docs/img/map.png)
+![Cadastre measuring a 2.35 GB "Projects" folder: a treemap coloured by file type — a Python virtual environment and CSV data on the left, Rust build libraries in the same red as the Python binaries, two videos in purple, FLAC audio, photos and web dependencies — and an inspector listing the eight top-level folders, from ml-notebook at 529 MB down to documents at 20 MB](docs/img/map.png)
 
 ## Features
 
@@ -38,7 +38,7 @@ An app with a map, and the same binary as a command-line tool.
 
 | By shared blocks | Reclaim space |
 |---|---|
-| ![The same folder coloured by shared blocks: almost everything dark blue, exclusive; the drone video, its clone in backups, and the stations.csv file and its clone in pale blue, fully shared](docs/img/shared.png) | ![The Reclaim space panel over the map: node_modules 406 MB, target 350 MB and .venv 345 MB, each marked regenerable with the command that rebuilds it, 1.10 GB selected, and a Move to Trash button](docs/img/reclaim.png) |
+| ![The same folder coloured by shared blocks: almost everything pale blue, exclusive; the drone video, its clone in backups, and the stations.csv file and its clone in dark blue, fully shared](docs/img/shared.png) | ![The Reclaim space panel over the map: node_modules 406 MB, target 350 MB and .venv 345 MB, each marked regenerable with the command that rebuilds it, 1.10 GB selected, and a Move to Trash button](docs/img/reclaim.png) |
 
 The pale tiles are clones: deleting the video in `backups` frees nothing as
 long as the original stays, which is what *By shared blocks* is for.

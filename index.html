@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cadastre — disk usage on macOS, without the usual lies</title>
+<meta name="description" content="Free, open-source macOS app that measures disk usage the way APFS really stores it: clones, hard links and shared blocks counted once, what deleting really frees, and what changed since last week.">
+<link rel="canonical" href="https://gwenn-ha-dev.github.io/Cadastre/">
+<link rel="icon" href="images/icon.png" type="image/png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Cadastre — disk usage on macOS, without the usual lies">
+<meta property="og:description" content="Free, open-source macOS app that measures disk usage the way APFS really stores it: clones, hard links and shared blocks counted once, what deleting really frees, and what changed since last week.">
+<meta property="og:url" content="https://gwenn-ha-dev.github.io/Cadastre/">
+<meta property="og:image" content="https://gwenn-ha-dev.github.io/Cadastre/images/social-preview.jpg">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://gwenn-ha-dev.github.io/Cadastre/images/social-preview.jpg">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Cadastre",
+ "operatingSystem":"macOS 14 or later","applicationCategory":"UtilitiesApplication",
+ "description":"Free, open-source macOS app that measures disk usage the way APFS really stores it: clones, hard links and shared blocks counted once, what deleting really frees, and what changed since last week.",
+ "offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"license":"https://opensource.org/licenses/MIT",
+ "downloadUrl":"https://github.com/gwenn-ha-dev/Cadastre/releases/latest",
+ "codeRepository":"https://github.com/gwenn-ha-dev/Cadastre","image":"https://gwenn-ha-dev.github.io/Cadastre/images/map.png"}
+</script>
+<style>
+  :root {
+    --bg: #ffffff; --panel: #f4f5f7; --line: #e2e4e8; --text: #16181d; --muted: #5d6170;
+    --accent: #2f7d5b; --accent-text: #fff; --link: #1f5fbf;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #111214; --panel: #1b1c1f; --line: #2c2d31; --text: #ececee; --muted: #a2a3a8; --link: #8ab4ff; }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 17px/1.55 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif; }
+  a { color: var(--link); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
+  header { padding: 72px 0 40px; text-align: center; }
+  .icon { width: 96px; height: 96px; }
+  h1 { font-size: clamp(34px, 6vw, 56px); margin: 12px 0 4px; letter-spacing: -0.02em; }
+  .lead { font-size: clamp(19px, 2.6vw, 23px); max-width: 760px; margin: 0 auto 28px; }
+  .cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .btn { display: inline-block; padding: 12px 22px; border-radius: 10px; text-decoration: none;
+         font-weight: 600; border: 1px solid var(--line); color: var(--text); background: var(--panel); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+  .req { color: var(--muted); font-size: 14px; margin-top: 12px; }
+  figure { margin: 0; }
+  .shot img, .hero img { max-width: 100%; height: auto; display: block; margin: 0 auto; border-radius: 12px; }
+  figcaption { color: var(--muted); font-size: 14px; margin-top: 8px; text-align: center; }
+  section { padding: 48px 0; border-top: 1px solid var(--line); }
+  h2 { font-size: 28px; margin: 0 0 20px; letter-spacing: -0.01em; }
+  .grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; }
+  .card h3 { margin: 0 0 6px; font-size: 18px; }
+  .card p { margin: 0; color: var(--muted); font-size: 15.5px; }
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: center; }
+  .split.rev .text { order: 2; }
+  @media (max-width: 760px) { .split { grid-template-columns: 1fr; } .split.rev .text { order: 0; } }
+  code { font: 14.5px ui-monospace, "SF Mono", Menlo, monospace; background: var(--panel);
+         padding: 2px 6px; border-radius: 6px; border: 1px solid var(--line); }
+  footer { padding: 36px 0 56px; color: var(--muted); font-size: 14px; text-align: center;
+           border-top: 1px solid var(--line); }
+</style>
+</head>
+<body>
+<header class="wrap">
+  <img class="icon" src="images/icon.png" width="96" height="96" alt="">
+  <h1>Cadastre</h1>
+  <p class="lead">Disk usage on macOS that tells apart “how big is it” from “what do I get back if I delete it”. On APFS those are two different questions: clones, hard links and shared blocks make the usual tools count some bytes twice and promise space a deletion will never free.</p>
+  <div class="cta">
+    <a class="btn primary" href="https://github.com/gwenn-ha-dev/Cadastre/releases/latest">Download for macOS</a>
+    <a class="btn" href="https://github.com/gwenn-ha-dev/Cadastre">Source on GitHub</a>
+  </div>
+  <p class="req">Free and open source (MIT) · macOS 14 or later · signed and notarized · English and French</p>
+</header>
+
+<div class="wrap hero">
+  <figure>
+    <img src="images/map.png" alt="Cadastre measuring a 2.35 GB Projects folder: a treemap coloured by file type, and an inspector listing the eight top-level folders from 529 MB down to 20 MB">
+    <figcaption>An invented “Projects” folder, measured: one rectangle per file, its area the file’s real footprint.</figcaption>
+  </figure>
+</div>
+
+<section class="wrap" style="margin-top:48px">
+  <h2>Why Cadastre</h2>
+  <div class="grid3">
+    <div class="card"><h3>Five measures</h3><p>Logical size, allocated blocks, real footprint, exclusive to the entry, and reclaimable — the last one is what deleting the whole folder actually frees.</p></div>
+    <div class="card"><h3>APFS, for real</h3><p>Clones, hard links, sparse files and compression are accounted for. Evicted iCloud files are never downloaded to be measured.</p></div>
+    <div class="card"><h3>Safe to delete</h3><p>Only folders a tool can rebuild, with the proof beside them. Everything goes to the Trash, and ⌘Z puts it back.</p></div>
+    <div class="card"><h3>What changed</h3><p>Drop a marker, come back later: see where the bytes went, and which folders only look smaller because a file was cloned.</p></div>
+    <div class="card"><h3>A command line too</h3><p>The app’s own binary is <code>cadastre</code>: the same measures, a reclaim report, JSON exports.</p></div>
+    <div class="card"><h3>Local only</h3><p>It reads file metadata on your Mac. No network, no account, nothing collected. Zero dependencies.</p></div>
+  </div>
+</section>
+
+<section class="wrap">
+  <div class="split">
+    <div class="text">
+      <h2>Shared blocks, in pale</h2>
+      <p>Coloured by shared blocks, the map shows which files are clones. Deleting the copy in
+        <code>backups</code> frees nothing while the original stays — the totals say so, and so does the map.</p>
+    </div>
+    <figure class="shot"><img src="images/shared.png" alt="The same folder coloured by shared blocks: almost everything dark blue, a video and a CSV file and their clones pale blue" loading="lazy"></figure>
+  </div>
+</section>
+
+<section class="wrap">
+  <div class="split rev">
+    <div class="text">
+      <h2>The gain of the whole selection</h2>
+      <p>The reclaim panel adds up what the checked folders free together, clones deducted, and says
+        how each one comes back: <code>npm install</code>, <code>cargo build</code>, a new virtual environment.</p>
+    </div>
+    <figure class="shot"><img src="images/reclaim.png" alt="The reclaim panel: node_modules 406 MB, target 350 MB and .venv 345 MB, 1.10 GB selected" loading="lazy"></figure>
+  </div>
+</section>
+
+<section class="wrap">
+  <div class="split">
+    <div class="text">
+      <h2>What ate the space this week</h2>
+      <p>Against a marker, the map colours the bytes actually written, and the panel lists where they went —
+        telling a real write from accounting that only shifted.</p>
+    </div>
+    <figure class="shot"><img src="images/changes.png" alt="The what-changed panel: from 2.35 GB to 2.60 GB, a Rust build that grew by 147 MB, a new dist folder, and a videos folder marked nothing written — cloned elsewhere" loading="lazy"></figure>
+  </div>
+</section>
+
+<section class="wrap" style="text-align:center">
+  <h2>Get it</h2>
+  <div class="cta">
+    <a class="btn primary" href="https://github.com/gwenn-ha-dev/Cadastre/releases/latest">Download the .dmg</a>
+    <a class="btn" href="https://github.com/gwenn-ha-dev/Cadastre#readme">Read the README</a>
+    <a class="btn" href="https://github.com/gwenn-ha-dev/Cadastre/blob/main/README.fr.md">En français</a>
+  </div>
+  <p class="req">Open the .dmg, drag Cadastre onto Applications. It is signed with a Developer ID and notarized by Apple: it opens with a double click.</p>
+</section>
+
+<footer class="wrap">
+  Cadastre · MIT · <a href="https://github.com/gwenn-ha-dev/Cadastre">github.com/gwenn-ha-dev/Cadastre</a>
+</footer>
+</body>
+</html>

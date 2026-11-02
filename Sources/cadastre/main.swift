@@ -438,6 +438,9 @@ func jsonEscaped(_ s: String) -> String {
 /// kept. This is the feed a treemap renderer consumes.
 @MainActor func exportJSON(_ result: ScanResult, to file: String) throws {
     let tree = result.tree
+    // A local copy: capturing the main-actor global in the sort closures makes
+    // them main-actor closures, which older compilers refuse to send `tree` to.
+    let measure = metric
     var out = Data()
     out.reserveCapacity(tree.count * 160)
 
@@ -457,8 +460,8 @@ func jsonEscaped(_ s: String) -> String {
             append(",\"skipped\":\"\(reason == .denied ? "denied" : reason == .otherVolume ? "other-volume" : "io-error")\"")
         }
         let children = tree.children[Int(node)]
-            .filter { metric.value(tree.total[Int($0)]) > 0 }
-            .sorted { metric.value(tree.total[Int($0)]) > metric.value(tree.total[Int($1)]) }
+            .filter { measure.value(tree.total[Int($0)]) > 0 }
+            .sorted { measure.value(tree.total[Int($0)]) > measure.value(tree.total[Int($1)]) }
         if !children.isEmpty {
             append(",\"children\":[")
             for (position, child) in children.enumerated() {

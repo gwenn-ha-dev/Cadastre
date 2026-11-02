@@ -1,6 +1,40 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "\n  %d folder moved, %@ reclaimable once the Trash is emptied": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\n  %d folder moved, %@ reclaimable once the Trash is emptied"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\n  %d dossier déplacé, %@ récupérables une fois la corbeille vidée"
+          }
+        }
+      }
+    },
+    "\n  %d folder to the Trash, %@ to reclaim.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\n  %d folder to the Trash, %@ to reclaim."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\n  %d dossier vers la corbeille, %@ à récupérer."
+          }
+        }
+      }
+    },
     "\n  %d folders moved, %@ reclaimable once the Trash is emptied": {
       "extractionState": "manual",
       "localizations": {
@@ -188,19 +222,19 @@
         }
       }
     },
-    "  %@ folders, %@ files in %.2f s  (%.0f entries/s)\n": {
+    "  %@, %@ in %.2f s  (%.0f entries/s)\n": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "  %@ folders, %@ files in %.2f s  (%.0f entries/s)\n"
+            "value": "  %@, %@ in %.2f s  (%.0f entries/s)\n"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "  %@ dossiers, %@ fichiers en %.2f s  (%.0f entrées/s)\n"
+            "value": "  %@, %@ en %.2f s  (%.0f entrées/s)\n"
           }
         }
       }
@@ -460,23 +494,6 @@
         }
       }
     },
-    "  ·  %d files appeared, %d vanished\n": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "  ·  %d files appeared, %d vanished\n"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "  ·  %d fichiers apparus, %d disparus\n"
-          }
-        }
-      }
-    },
     "  … and %d more\n": {
       "extractionState": "manual",
       "localizations": {
@@ -596,6 +613,23 @@
         }
       }
     },
+    "%.1f s": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%.1f s"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%.1f s"
+          }
+        }
+      }
+    },
     "%@\n\nPick it under “compare to” after a later scan to see what changed.": {
       "extractionState": "manual",
       "localizations": {
@@ -664,36 +698,138 @@
         }
       }
     },
-    "%@ files appeared · %@ vanished · threshold %@": {
+    "%@ file": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ files appeared · %@ vanished · threshold %@"
+            "value": "%@ file"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ fichiers apparus · %@ disparus · seuil %@"
+            "value": "%@ fichier"
           }
         }
       }
     },
-    "%@ folders · %@ files · %.1f s": {
+    "%@ file appeared": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ folders · %@ files · %.1f s"
+            "value": "%@ file appeared"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ dossiers · %@ fichiers · %.1f s"
+            "value": "%@ fichier apparu"
+          }
+        }
+      }
+    },
+    "%@ file vanished": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ file vanished"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ fichier disparu"
+          }
+        }
+      }
+    },
+    "%@ files": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ files"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ fichiers"
+          }
+        }
+      }
+    },
+    "%@ files appeared": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ files appeared"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ fichiers apparus"
+          }
+        }
+      }
+    },
+    "%@ files vanished": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ files vanished"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ fichiers disparus"
+          }
+        }
+      }
+    },
+    "%@ folder": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ folder"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ dossier"
+          }
+        }
+      }
+    },
+    "%@ folders": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ folders"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ dossiers"
           }
         }
       }
@@ -749,6 +885,23 @@
         }
       }
     },
+    "%@ match · %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ match · %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ correspondance · %@"
+          }
+        }
+      }
+    },
     "%@ matches · %@": {
       "extractionState": "manual",
       "localizations": {
@@ -800,6 +953,23 @@
         }
       }
     },
+    "%@ · %@ · threshold %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · %@ · threshold %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · %@ · seuil %@"
+          }
+        }
+      }
+    },
     "%@, %@, %@": {
       "comment": "VoiceOver label of a tile: name, size, kind",
       "extractionState": "manual",
@@ -814,6 +984,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@, %@, %@"
+          }
+        }
+      }
+    },
+    "%@: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ : %@"
           }
         }
       }
@@ -920,6 +1107,57 @@
         }
       }
     },
+    "%d folder refused": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d folder refused"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d dossier refusé"
+          }
+        }
+      }
+    },
+    "%d folder selected": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d folder selected"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d dossier sélectionné"
+          }
+        }
+      }
+    },
+    "%d folder was left in place": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d folder was left in place"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d dossier est resté en place"
+          }
+        }
+      }
+    },
     "%d folders refused": {
       "extractionState": "manual",
       "localizations": {
@@ -950,6 +1188,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "%d dossiers refusés "
+          }
+        }
+      }
+    },
+    "%d folders selected": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d folders selected"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d dossiers sélectionnés"
+          }
+        }
+      }
+    },
+    "%d folders were left in place": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d folders were left in place"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d dossiers sont restés en place"
           }
         }
       }
@@ -1086,23 +1358,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "%d s"
-          }
-        }
-      }
-    },
-    "%d selected": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d selected"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d sélectionnés"
           }
         }
       }
@@ -1787,6 +2042,23 @@
         }
       }
     },
+    "Copy": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copier"
+          }
+        }
+      }
+    },
     "Copy Path": {
       "extractionState": "manual",
       "localizations": {
@@ -1851,6 +2123,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Impossible de tout remettre"
+          }
+        }
+      }
+    },
+    "Cut": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cut"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couper"
           }
         }
       }
@@ -2365,6 +2654,23 @@
         }
       }
     },
+    "Legend": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Legend"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Légende"
+          }
+        }
+      }
+    },
     "Logical size": {
       "extractionState": "manual",
       "localizations": {
@@ -2633,6 +2939,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mettre %d éléments à la corbeille"
+          }
+        }
+      }
+    },
+    "Move %d folder to the Trash?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move %d folder to the Trash?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mettre %d dossier à la corbeille ?"
           }
         }
       }
@@ -3062,6 +3385,23 @@
         }
       }
     },
+    "Paste": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paste"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coller"
+          }
+        }
+      }
+    },
     "Place a Marker": {
       "extractionState": "manual",
       "localizations": {
@@ -3283,6 +3623,23 @@
         }
       }
     },
+    "Redo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Redo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rétablir"
+          }
+        }
+      }
+    },
     "Reveal in Finder": {
       "extractionState": "manual",
       "localizations": {
@@ -3330,6 +3687,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Enregistrer l'état actuel pour comparer plus tard (⌘S)"
+          }
+        }
+      }
+    },
+    "Select All": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select All"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tout sélectionner"
           }
         }
       }
@@ -4622,6 +4996,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "entrées"
+          }
+        }
+      }
+    },
+    "everything the map shows": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "everything the map shows"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tout ce que montre la carte"
           }
         }
       }
@@ -6322,23 +6713,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "plus le dossier est profond, plus la teinte est soutenue"
-          }
-        }
-      }
-    },
-    "the whole of what is on screen": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "the whole of what is on screen"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "tout ce qui est à l'écran"
           }
         }
       }

@@ -51,6 +51,8 @@ final class DiffSheet: NSObject, NSTableViewDataSource, NSTableViewDelegate {
         panel = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 780, height: 540),
                          styleMask: [.titled, .resizable], backing: .buffered, defer: false)
         panel.minSize = NSSize(width: 640, height: 380)
+        // Owned by this object: AppKit must not also release it on close.
+        panel.isReleasedWhenClosed = false
         super.init()
         build()
     }
@@ -93,10 +95,11 @@ final class DiffSheet: NSObject, NSTableViewDataSource, NSTableViewDelegate {
         figures.addArrangedSubview(arrow)
         figures.addArrangedSubview(figure(humanBytes(diff.totalAfter), tr("after")))
         figures.addArrangedSubview(figure(signedBytes(diff.delta), diff.metric.title,
-                                          tint: diff.delta > 0 ? Palette.statusCritical.nsColor
-                                              : diff.delta < 0 ? Palette.statusGood.nsColor : .labelColor))
-        let counts = NSTextField(labelWithString: tr("%@ files appeared · %@ vanished · threshold %@",
-                                                     L10n.count(diff.addedFileCount), L10n.count(diff.removedFileCount),
+                                          tint: diff.delta > 0 ? Palette.grewText
+                                              : diff.delta < 0 ? Palette.shrankText : .labelColor))
+        let counts = NSTextField(labelWithString: tr("%@ · %@ · threshold %@",
+                                                     filesAppeared(diff.addedFileCount),
+                                                     filesVanished(diff.removedFileCount),
                                                      humanBytes(diff.threshold)))
         counts.font = .preferredFont(forTextStyle: .caption1)
         counts.textColor = .tertiaryLabelColor
@@ -206,7 +209,7 @@ final class DiffSheet: NSObject, NSTableViewDataSource, NSTableViewDelegate {
                 let field = NSTextField(labelWithString: signedBytes(value))
                 field.font = .monospacedDigitSystemFont(ofSize: 12, weight: .medium)
                 field.alignment = .right
-                field.textColor = value > 0 ? Palette.statusCritical.nsColor : Palette.statusGood.nsColor
+                field.textColor = value > 0 ? Palette.grewText : Palette.shrankText
                 return field
             case "note":
                 var note = ""

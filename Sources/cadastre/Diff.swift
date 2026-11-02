@@ -181,6 +181,13 @@ struct ScanDiff {
     }
 }
 
+func filesAppeared(_ n: Int) -> String {
+    tr(count: n, one: "%@ file appeared", other: "%@ files appeared", L10n.count(n))
+}
+func filesVanished(_ n: Int) -> String {
+    tr(count: n, one: "%@ file vanished", other: "%@ files vanished", L10n.count(n))
+}
+
 func humanDuration(_ seconds: TimeInterval) -> String {
     let total = Int(abs(seconds).rounded())
     if total < 90 { return tr("%d s", total) }
@@ -208,8 +215,8 @@ extension Renderer {
         out += "  \(metric.rawValue.padded(12)) \(humanBytes(diff.totalBefore).padded(10)) → "
         out += "\(humanBytes(diff.totalAfter).padded(10))   " + Style.bold(colour(signedBytes(diff.delta))) + "\n"
         out += Style.dim(tr("  display threshold %@", humanBytes(diff.threshold)))
-        out += Style.dim(tr("  ·  %d files appeared, %d vanished\n",
-                            diff.addedFileCount, diff.removedFileCount))
+        out += Style.dim("  ·  " + filesAppeared(diff.addedFileCount) + ", "
+                         + filesVanished(diff.removedFileCount) + "\n")
 
         if diff.directories.isEmpty && diff.files.isEmpty {
             out += "\n  " + Style.green(tr("nothing significant moved")) + "\n"

@@ -84,7 +84,17 @@ final class TreemapView: NSView {
     private(set) var rootNode: Int32 = 0
     private(set) var selectedNode: Int32? = nil
     var model: TreemapModel? {
-        didSet { rootNode = 0; selectedNode = nil; rebuildMatchMask(); rebuildLayout() }
+        didSet {
+            // A new measure lands whatever is in flight. A zoom still holding
+            // node numbers from the old model would land on the wrong folder,
+            // or past the end of a smaller one.
+            timer?.invalidate(); timer = nil
+            animation = nil
+            zoomScale = SIMD2(1, 1); zoomTranslate = SIMD2(0, 0)
+            labels.isHidden = false
+            rootNode = 0; selectedNode = nil; hoverIndex = -1
+            rebuildMatchMask(); rebuildLayout()
+        }
     }
     var colorMode: ColorMode = .kind {
         didSet { refreshColors() }
@@ -132,6 +142,10 @@ final class TreemapView: NSView {
         host.metalLayer.pixelFormat = .bgra8Unorm
         host.metalLayer.framebufferOnly = true
         host.metalLayer.isOpaque = true
+        // The palette is specified, and its separation measured, in sRGB:
+        // tagged, the layer is colour-matched like the AppKit legend beside it
+        // instead of being sent raw to a P3 panel, more saturated than chosen.
+        host.metalLayer.colorspace = CGColorSpace(name: CGColorSpace.sRGB)
         addSubview(host)
         addSubview(labels)
     }
@@ -166,6 +180,13 @@ final class TreemapView: NSView {
                                   owner: self, userInfo: nil)
         addTrackingArea(area)
         tracking = area
+    }
+
+    /// Moving between a 1× and a 2× screen changes the backing scale without
+    /// changing the size, so `layout()` would not otherwise run again.
+    override func viewDidChangeBackingProperties() {
+        super.viewDidChangeBackingProperties()
+        needsLayout = true
     }
 
     override func viewDidChangeEffectiveAppearance() {
@@ -377,7 +398,13 @@ final class TreemapView: NSView {
                 onActivate?(hit.node)
             }
         case 48:                                     // tab: step into the selection
-            stepInto()
+            // …and when there is nothing to step into, Tab leaves the map as
+            // it leaves any other control, so the keyboard is never trapped.
+            if event.modifierFlags.contains(.shift) {
+                window?.selectPreviousKeyView(self)
+            } else if !stepInto() {
+                window?.selectNextKeyView(self)
+            }
         case 49:                                     // space: Quick Look
             toggleQuickLook()
         default: super.keyDown(with: event)
@@ -449,13 +476,15 @@ final class TreemapView: NSView {
         if best >= 0 { select(index: best) }
     }
 
-    private func stepInto() {
-        guard let model, selectedIndex >= 0 else { return }
+    @discardableResult
+    private func stepInto() -> Bool {
+        guard let model, selectedIndex >= 0 else { return false }
         let current = rects[selectedIndex]
-        guard model.isDirectory[Int(current.node)], !current.isLeaf else { return }
-        if let child = rects.firstIndex(where: { model.parent[Int($0.node)] == current.node }) {
-            select(index: child)
-        }
+        guard model.isDirectory[Int(current.node)], !current.isLeaf else { return false }
+        guard let child = rects.firstIndex(where: { model.parent[Int($0.node)] == current.node })
+        else { return false }
+        select(index: child)
+        return true
     }
 
     func zoomOut() {
@@ -499,9 +528,15 @@ final class TreemapView: NSView {
 
     private func animate(from: (SIMD2<Float>, SIMD2<Float>), to: (SIMD2<Float>, SIMD2<Float>),
                          completion: (() -> Void)?) {
-        animation = (from, to, CACurrentMediaTime(), 0.28, completion)
         hoverIndex = -1
         selectedIndex = -1
+        // Reduce Motion: the same transition, landed at once.
+        if NSWorkspace.shared.accessibilityDisplayShouldReduceMotion {
+            animation = (from, to, CACurrentMediaTime() - 1, 0.28, completion)
+            step()
+            return
+        }
+        animation = (from, to, CACurrentMediaTime(), 0.28, completion)
         timer?.invalidate()
         timer = Timer.scheduledTimer(withTimeInterval: 1.0 / 120, repeats: true) { [weak self] _ in
             // Scheduled on the main run loop, so it fires there.
@@ -562,6 +597,24 @@ extension TreemapView: @preconcurrency QLPreviewPanelDataSource, @preconcurrency
         let rect = rects[selectedIndex].rect
         let local = NSRect(x: CGFloat(rect.x), y: CGFloat(rect.y), width: CGFloat(rect.width), height: CGFloat(rect.height))
         return window.convertToScreen(convert(local, to: nil))
+    }
+}
+
+extension Palette {
+    /// The diverging ramp's poles as text colours that follow the appearance.
+    /// A figure that grew or shrank reads in the same red and blue as its
+    /// rectangle on the map — not in a status green, which said "shrank"
+    /// in a second colour and paired red with green, the pair colour-blind
+    /// readers lose first.
+    static var grewText: NSColor {
+        NSColor(name: nil) { appearance in
+            Palette.delta(1, appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua ? .dark : .light).nsColor
+        }
+    }
+    static var shrankText: NSColor {
+        NSColor(name: nil) { appearance in
+            Palette.delta(-1, appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua ? .dark : .light).nsColor
+        }
     }
 }
 

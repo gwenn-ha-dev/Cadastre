@@ -64,7 +64,7 @@ final class TreemapModel {
                  "tsx", "jsx", "rb", "java", "kt", "sh", "html", "css", "json", "yaml", "yml",
                  "toml", "xml", "sql", "metal": return .code
             case "png", "jpg", "jpeg", "gif", "heic", "webp", "tiff", "svg", "psd", "raw",
-                 "cr2", "nef", "icns": return .image
+                 "cr2", "nef", "icns", "ktx", "ktx2", "dds", "exr", "hdr", "astc": return .image
             case "mov", "mp4", "m4v", "avi", "mkv", "webm", "wmv", "prores", "smk",
                  "mpg", "mpeg", "m2ts", "flv", "ogv": return .video
             case "mp3", "m4a", "wav", "aiff", "aif", "flac", "aac", "ogg", "opus",
@@ -75,7 +75,8 @@ final class TreemapModel {
                  "pptx", "md", "txt", "rtf", "rtfd", "epub", "tex", "csv", "log": return .document
             case "db", "sqlite", "sqlite3", "bin", "dat", "pack", "idx", "safetensors",
                  "gguf", "ckpt", "pt", "pth", "onnx", "npz": return .data
-            case "o", "a", "so", "dylib", "framework", "app", "exe", "wasm": return .binary
+            case "o", "a", "so", "dylib", "framework", "app", "exe", "wasm",
+                 "rlib", "rmeta", "lib", "dll": return .binary
             default: return .other
             }
         }

@@ -51,7 +51,8 @@ final class ReclaimSheet: NSObject, NSTableViewDataSource, NSTableViewDelegate {
     private let session: Session
     private let candidates: [Reclaim.Candidate]
     private var chosen: Set<Int>
-    private let onFinish: ([(trashed: URL, original: URL)]) -> Void
+    /// What moved (for undo), and one line per folder left in place.
+    private let onFinish: ([(trashed: URL, original: URL)], [String]) -> Void
 
     private let panel: NSWindow
     private let table = NSTableView()
@@ -59,7 +60,7 @@ final class ReclaimSheet: NSObject, NSTableViewDataSource, NSTableViewDelegate {
     private let summary = NSTextField(labelWithString: "")
     private let action = NSButton()
 
-    init(session: Session, onFinish: @escaping ([(trashed: URL, original: URL)]) -> Void) {
+    init(session: Session, onFinish: @escaping ([(trashed: URL, original: URL)], [String]) -> Void) {
         self.session = session
         // Biggest gain first, and the "your call" entries last — they can be
         // looked at but never ticked.
@@ -75,6 +76,8 @@ final class ReclaimSheet: NSObject, NSTableViewDataSource, NSTableViewDelegate {
         panel = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 760, height: 500),
                          styleMask: [.titled, .resizable], backing: .buffered, defer: false)
         panel.minSize = NSSize(width: 620, height: 360)
+        // Owned by this object: AppKit must not also release it on close.
+        panel.isReleasedWhenClosed = false
         super.init()
         build()
         refreshSummary()
@@ -93,7 +96,9 @@ final class ReclaimSheet: NSObject, NSTableViewDataSource, NSTableViewDelegate {
 
         table.headerView = NSTableHeaderView()
         table.rowHeight = 36
-        table.usesAlternatingRowBackgroundColors = true
+        // No stripes: with three candidates they only painted the empty
+        // half of the table, which read as rows with nothing in them.
+        table.usesAlternatingRowBackgroundColors = false
         table.dataSource = self
         table.delegate = self
         table.style = .inset
@@ -180,7 +185,7 @@ final class ReclaimSheet: NSObject, NSTableViewDataSource, NSTableViewDelegate {
         let combined = Reclaim.combinedFreed(picked, in: session.result)
         let separately = picked.reduce(0) { $0 + $1.sizes.retained }
         total.stringValue = humanBytes(combined)
-        var text = tr("%d selected", picked.count)
+        var text = tr(count: picked.count, one: "%d folder selected", other: "%d folders selected", picked.count)
         if combined > separately + (1 << 20) {
             text += tr(" · %@ of it only comes back together",
                        humanBytes(combined - separately))
@@ -194,7 +199,8 @@ final class ReclaimSheet: NSObject, NSTableViewDataSource, NSTableViewDelegate {
         guard !picked.isEmpty else { return }
 
         let alert = NSAlert()
-        alert.messageText = tr("Move %d folders to the Trash?", picked.count)
+        alert.messageText = tr(count: picked.count, one: "Move %d folder to the Trash?",
+                               other: "Move %d folders to the Trash?", picked.count)
         alert.informativeText = tr("Nothing is erased: everything goes to the Trash, and can come back from it.")
         alert.alertStyle = .warning
         alert.addButton(withTitle: tr("Move to Trash"))
@@ -202,19 +208,26 @@ final class ReclaimSheet: NSObject, NSTableViewDataSource, NSTableViewDelegate {
         alert.beginSheetModal(for: panel) { [weak self] response in
             guard let self, response == .alertFirstButtonReturn else { return }
             var moved: [(trashed: URL, original: URL)] = []
+            var leftInPlace: [String] = []
             for candidate in picked {
+                let name = abbreviatingHome(candidate.path)
                 // Verified again here, not trusted from the scan: the catalogue
                 // matched minutes ago and the disk has kept moving since.
-                guard Reclaim.verify(candidate.path, rule: candidate.rule) == nil else { continue }
+                if let problem = Reclaim.verify(candidate.path, rule: candidate.rule) {
+                    leftInPlace.append(tr("%@: %@", name, problem))
+                    continue
+                }
                 var trashed: NSURL?
                 let original = URL(fileURLWithPath: candidate.path)
-                if (try? FileManager.default.trashItem(at: original, resultingItemURL: &trashed)) != nil,
-                   let trashed = trashed as URL? {
-                    moved.append((trashed, original))
+                do {
+                    try FileManager.default.trashItem(at: original, resultingItemURL: &trashed)
+                    if let trashed = trashed as URL? { moved.append((trashed, original)) }
+                } catch {
+                    leftInPlace.append(tr("%@: %@", name, error.localizedDescription))
                 }
             }
             self.panel.sheetParent?.endSheet(self.panel)
-            self.onFinish(moved)
+            self.onFinish(moved, leftInPlace)
         }
     }
 
@@ -257,15 +270,25 @@ final class ReclaimSheet: NSObject, NSTableViewDataSource, NSTableViewDelegate {
             let head = NSStackView(views: [name, tag])
             head.orientation = .horizontal
             head.spacing = 6
-            var detail = (candidate.path as NSString).deletingLastPathComponent + " · " + candidate.rule.label
-            if let age = candidate.age {
-                detail += " · " + tr("modified %@ ago", humanDuration(age))
+            // Two fields, so that only the folder is shortened: truncating
+            // the whole line ate the separator and ran the path into the
+            // rule ("…/website…npm dependencies").
+            var notes = [candidate.rule.label]
+            if let age = candidate.age { notes.append(tr("modified %@ ago", humanDuration(age))) }
+            let parent = NSTextField(labelWithString: abbreviatingHome((candidate.path as NSString).deletingLastPathComponent))
+            let about = NSTextField(labelWithString: " · " + notes.joined(separator: " · "))
+            for field in [parent, about] {
+                field.font = .systemFont(ofSize: 9.5)
+                field.textColor = .tertiaryLabelColor
             }
-            let parent = NSTextField(labelWithString: detail)
-            parent.font = .systemFont(ofSize: 9.5)
-            parent.textColor = .tertiaryLabelColor
             parent.lineBreakMode = .byTruncatingMiddle
-            let stack = NSStackView(views: [head, parent])
+            parent.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+            about.lineBreakMode = .byClipping
+            about.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
+            let line = NSStackView(views: [parent, about])
+            line.orientation = .horizontal
+            line.spacing = 0
+            let stack = NSStackView(views: [head, line])
             stack.orientation = .vertical
             stack.alignment = .leading
             stack.spacing = 1

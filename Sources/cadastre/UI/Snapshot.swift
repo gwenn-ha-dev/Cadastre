@@ -23,6 +23,10 @@ enum TreemapSnapshot {
     static func write(model: TreemapModel, colorMode: ColorMode, mode: Palette.Mode,
                       size: CGSize, scale: CGFloat = 2, to path: String) throws {
         guard let renderer = TreemapRenderer() else { throw Failure.noRenderer }
+        // The command line bounds --size; this is for any other caller. A
+        // canvas of zero height is a zero-sized texture, which Metal aborts on.
+        guard size.width.isFinite, size.height.isFinite, size.width >= 64, size.height >= 64
+        else { throw Failure.noTexture }
 
         let canvas = CGSize(width: size.width, height: size.height - 28)  // legend strip
         let rects = TreemapLayout.compute(model, root: 0,
@@ -74,7 +78,7 @@ enum TreemapSnapshot {
         if let provider = CGDataProvider(data: Data(pixels) as CFData),
            let image = CGImage(width: pixelWidth, height: pixelHeight, bitsPerComponent: 8,
                                bitsPerPixel: 32, bytesPerRow: pixelWidth * 4,
-                               space: CGColorSpaceCreateDeviceRGB(),
+                               space: CGColorSpace(name: CGColorSpace.sRGB)!,
                                bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.noneSkipFirst.rawValue
                                                         | CGBitmapInfo.byteOrder32Little.rawValue),
                                provider: provider, decode: nil, shouldInterpolate: false,

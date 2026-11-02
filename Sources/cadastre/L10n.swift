@@ -96,3 +96,20 @@ func tr(_ key: String) -> String {
 func tr(_ key: String, _ arguments: CVarArg...) -> String {
     String(format: L10n.lookup(key), locale: L10n.language.locale, arguments: arguments)
 }
+
+/// A phrase that agrees with a number: `one` where the language uses the
+/// singular — 1 in English, 0 and 1 in French — and `other` elsewhere. Each
+/// form is a catalogue key of its own, written with the number in it, so
+/// "1 folders" and « 0 dossiers » never reach the screen.
+func tr(count: Int, one: String, other: String, _ arguments: CVarArg...) -> String {
+    let singular = L10n.language == .fr ? abs(count) < 2 : abs(count) == 1
+    return String(format: L10n.lookup(singular ? one : other), locale: L10n.language.locale, arguments: arguments)
+}
+
+/// "1 folder", "262 000 folders" — the counted nouns the status lines are made of.
+func countedFolders(_ n: Int) -> String {
+    tr(count: n, one: "%@ folder", other: "%@ folders", L10n.count(n))
+}
+func countedFiles(_ n: Int) -> String {
+    tr(count: n, one: "%@ file", other: "%@ files", L10n.count(n))
+}

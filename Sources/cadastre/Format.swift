@@ -129,8 +129,8 @@ struct Renderer {
 
         out += "\n" + Style.bold(tr("MEASURE  ")) + Style.dim(result.tree.name[Int(result.root)]) + "\n"
         let rate = stats.elapsed > 0 ? Double(stats.files + stats.directories) / stats.elapsed : 0
-        out += Style.dim(tr("  %@ folders, %@ files in %.2f s  (%.0f entries/s)\n",
-                            L10n.count(stats.directories), L10n.count(stats.files), stats.elapsed, rate))
+        out += Style.dim(tr("  %@, %@ in %.2f s  (%.0f entries/s)\n",
+                            countedFolders(stats.directories), countedFiles(stats.files), stats.elapsed, rate))
 
         out += "\n"
         func line(_ label: String, _ value: String, _ note: String, strong: Bool = false) -> String {
@@ -256,4 +256,12 @@ extension String {
     func leftPadded(_ width: Int) -> String {
         count >= width ? self + " " : self + String(repeating: " ", count: width - count)
     }
+}
+
+/// `~` for the home folder — only as a whole leading component: a plain
+/// substring replace turns `/Users/alice` into `~ice` when home is `/Users/al`.
+func abbreviatingHome(_ path: String, home: String = NSHomeDirectory()) -> String {
+    if path == home { return "~" }
+    if path.hasPrefix(home + "/") { return "~" + path.dropFirst(home.count) }
+    return path
 }

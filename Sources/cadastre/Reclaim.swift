@@ -558,7 +558,8 @@ extension Reclaim {
                 }
             }
             let total = combinedFreed(removable, in: result)
-            print(tr("\n  %d folders to the Trash, %@ to reclaim.", removable.count, humanBytes(total)))
+            print(tr(count: removable.count, one: "\n  %d folder to the Trash, %@ to reclaim.",
+                     other: "\n  %d folders to the Trash, %@ to reclaim.", removable.count, humanBytes(total)))
             print(tr("  Type “yes” to confirm: "), terminator: "")
             let accepted = ["yes", "y", "oui", "o"]
             guard let answer = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
@@ -587,7 +588,8 @@ extension Reclaim {
         // between two of these are freed only because both went, so the figure
         // is not the sum of the parts.
         let freed = combinedFreed(moved, in: result)
-        print(tr("\n  %d folders moved, %@ reclaimable once the Trash is emptied", moved.count, humanBytes(freed)))
+        print(tr(count: moved.count, one: "\n  %d folder moved, %@ reclaimable once the Trash is emptied",
+                 other: "\n  %d folders moved, %@ reclaimable once the Trash is emptied", moved.count, humanBytes(freed)))
         return moved.count
     }
 }

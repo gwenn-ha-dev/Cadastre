@@ -9,7 +9,7 @@ import AppKit
 /// and the inspector, is how that condition is met.
 final class LegendView: NSView {
     var mode: ColorMode = .kind { didSet { needsDisplay = true } }
-    var hasBaseline = false
+    var hasBaseline = false { didSet { needsDisplay = true } }
     /// Swatches alone say which colour means what; they never say what the
     /// colouring is *about*. The caption does.
     var caption: String = "" { didSet { needsDisplay = true } }
@@ -28,6 +28,14 @@ final class LegendView: NSView {
     override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
         needsDisplay = true
+    }
+
+    // The legend is the colour's second channel; VoiceOver must reach it too.
+    override func isAccessibilityElement() -> Bool { true }
+    override func accessibilityRole() -> NSAccessibility.Role? { .staticText }
+    override func accessibilityLabel() -> String? { tr("Legend") }
+    override func accessibilityValue() -> Any? {
+        ([caption] + entries().map(\.0)).filter { !$0.isEmpty }.joined(separator: ", ")
     }
 
     private func entries() -> [(String, RGBA)] {
@@ -102,14 +110,24 @@ final class LegendView: NSView {
             x += head.size().width + 12
         }
 
-        for (text, color) in items {
+        // A ramp reads "shallow ■■■■■ deep": its first label goes *before*
+        // the swatches. Written after, as for categories, it looked like the
+        // name of the first swatch alone, and the last label seemed to own
+        // every swatch in between.
+        let isRamp = mode == .depth || mode == .sharing
+        for (position, (text, color)) in items.enumerated() {
+            if isRamp, position == 0, let text {
+                let size = text.size()
+                text.draw(at: NSPoint(x: x, y: (bounds.height - size.height) / 2))
+                x += size.width + 4
+            }
             let swatch = NSRect(x: x, y: y, width: 10, height: 10)
             let path = NSBezierPath(roundedRect: swatch, xRadius: 2.5, yRadius: 2.5)
             color.nsColor.setFill()
             path.fill()
             x += 14
 
-            guard let text else { x += 2; continue }
+            guard let text, !(isRamp && position == 0) else { x += 2; continue }
             let size = text.size()
             text.draw(at: NSPoint(x: x, y: (bounds.height - size.height) / 2))
             x += size.width + gap

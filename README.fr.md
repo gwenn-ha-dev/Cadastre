@@ -521,6 +521,13 @@ est pas un.
   ligne d'avertissement et non une tuile
 - Une transition animée entre deux mesures : quand on change de surface, les
   rectangles se réorganisent d'un coup, et l'œil perd ce qu'il suivait
+- `--cross-mounts` identifie inodes et familles de clones par leur seul
+  numéro : ceux de deux volumes peuvent se confondre, ses totaux sont approchés
+- Pour un fichier à liens physiques, `exclusive` montre la part de l'inode de
+  chaque nom, alors que supprimer un seul nom ne libère rien tant que le
+  dernier reste
+- L'option Augmenter le contraste n'est pas encore prise en compte par les
+  gouttières et les cadres de la carte
 
 ## Construction
 

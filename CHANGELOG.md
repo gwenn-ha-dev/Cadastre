@@ -6,6 +6,51 @@ Versioning: [SemVer](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+- `node_modules` is offered only with a lockfile beside it
+  (`package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`…): a `package.json`
+  alone is also what an installed package carries.
+- Never offered for the Trash: a path that goes through a symbolic link,
+  anything inside an application bundle or an installed package, iCloud
+  Drive and `~/Library/CloudStorage`.
+- Copy Path is `⌥⌘C`, as in the Finder; `⌘C` copies text in the search field.
+- What grew and what shrank read in the map's red and blue everywhere,
+  instead of red and green in the changes panel and the inspector.
+- Records are index version 2 (they note an interrupted scan); version 1 is
+  still read.
+
+### Fixed
+- `--trash` asked for one "yes" for more folders than it had listed; it now
+  prints every one when the report was shortened.
+- `/var/folders`, `/var/db` and a lower-case `/applications` slipped past the
+  protected areas.
+- A folder given as a symbolic link (`/tmp`, a linked project) measured empty.
+- A folder whose name passes 511 bytes of UTF-8 lost its contents.
+- An interrupted scan could be saved as a marker, and later read as
+  gigabytes "appeared".
+- `--since last` could pick another folder's record when two paths share a
+  file-name slug (`/a/b_c`, `/a_b/c`).
+- `--top -1`, a tiny `--size` and a corrupt record crashed; `--depth abc` was
+  silently ignored; Ctrl-C was dead during the Trash question; a newline in a
+  file name broke `--json`.
+- Close, Minimize, Zoom and Full Screen menu items were never enabled; the
+  search field had no Paste or Select All, and `⌘Z` there undid a move to the
+  Trash.
+- A live re-measure took the keyboard from the search field and dropped the
+  selection; one landing mid-zoom could show the wrong folder.
+- The "compare to" menu loaded the wrong marker after a change of marker in
+  live mode; the legend kept saying "no marker loaded".
+- The whole disk kept its first figures for free space and other volumes.
+- The reclaim panel skipped folders without saying so; it now lists them.
+- "1 folders", "1 files", "Move 1 folders to the Trash?".
+- The map was not colour-managed on P3 displays and stayed at the old scale
+  when moved to a screen of another resolution.
+- Rust `.rlib` and GPU textures (`.ktx2`, `.dds`, `.exr`) were "other".
+
+### Added
+- Reduce Motion is honoured by the zoom; Tab leaves the map; VoiceOver reads
+  the legend.
+
 ## [0.3.0] — 2026-10-09
 
 First public release.

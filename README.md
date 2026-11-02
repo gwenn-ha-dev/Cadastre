@@ -499,6 +499,11 @@ program exists to avoid; a floor reported as a floor isn't one.
   warning line rather than a tile
 - An animated transition between two measures: switching the area metric
   reorganises every rectangle at once, and the eye loses what it was following
+- `--cross-mounts` keys inodes and clone families by number alone, so two
+  volumes' numbers can collide: its totals are approximate
+- For a hard-linked file, `exclusive` shows each name's share of the inode,
+  while deleting one name alone frees nothing until the last one goes
+- Increase Contrast is not yet honoured by the map's gutters and frames
 
 ## Build
 
